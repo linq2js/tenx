@@ -1,0 +1,5 @@
+{
+  "main": "../dist/store.js",
+  "module": "../dist/store.js",
+  "types": "../src/store.d.ts"
+}
