@@ -3,10 +3,21 @@ import createEmitter from "./createEmitter";
 import shallowEqual from "./shallowEqual";
 import createMatcher from "./createMatcher";
 
+const defaultSettings = {
+  asyncActions: {
+    loading: "async.loading",
+    success: "async.success",
+    error: "async.error",
+    done: false,
+  },
+};
+
 function init(hooks = {}) {
   if (!hooks.emitter) {
     hooks.emitter = createEmitter();
   }
+
+  hooks.settings = Object.assign({}, defaultSettings, hooks.settings);
 
   hooks.dispatchingCount = 0;
 
@@ -125,20 +136,45 @@ function init(hooks = {}) {
         if (!matcher(action.type)) return;
         const result = handler(action);
         if (isPromiseLike(result)) {
-          result.then(
-            (payload) =>
+          const promise = result;
+
+          const dispatchDone =
+            hooks.settings.asyncActions.done &&
+            (() =>
               hooks.dispatch({
-                type: "async.success",
-                payload,
+                type: hooks.settings.asyncActions.done,
+                payload: undefined,
                 action,
-                promise: result,
-              }),
-            (error) =>
-              hooks.dispatch({
-                type: "async.error",
-                error,
-                promise: result,
-              })
+                promise,
+              }));
+
+          hooks.settings.asyncActions.loading &&
+            hooks.dispatch({
+              type: hooks.settings.asyncActions.loading,
+              payload: undefined,
+              action,
+              promise,
+            });
+          result.then(
+            (payload) => {
+              hooks.settings.asyncActions.success &&
+                hooks.dispatch({
+                  type: hooks.settings.asyncActions.success,
+                  payload,
+                  action,
+                  promise,
+                });
+              dispatchDone && dispatchDone();
+            },
+            (error) => {
+              hooks.settings.asyncActions.error &&
+                hooks.dispatch({
+                  type: hooks.settings.asyncActions.error,
+                  payload: error,
+                  promise,
+                });
+              dispatchDone && dispatchDone();
+            }
           );
         }
       });

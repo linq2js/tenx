@@ -1,6 +1,6 @@
 {
   "name": "tenx",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A tiny Flux implementation for Javascript/React app",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
