@@ -46,3 +46,4 @@ To dispatch an increase action, just call overload **tenx(actionName, payload)**
 ## Examples
 
 1. [Counter App](https://codesandbox.io/s/strange-morning-2x2r4?file=/src/App.js)
+1. [Reddit App](https://codesandbox.io/s/tenx-reddit-app-6qvhq?file=/src/App.js)
