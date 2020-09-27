@@ -1,5 +1,0 @@
-{
-  "main": "../dist/epic.js",
-  "module": "../dist/epic.js",
-  "types": "../src/epic.d.ts"
-}

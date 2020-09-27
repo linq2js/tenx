@@ -1,5 +1,0 @@
-{
-  "main": "../dist/loadable.js",
-  "module": "../dist/loadable.js",
-  "types": "../src/loadable.d.ts"
-}

@@ -1,6 +1,6 @@
 {
   "name": "tenx",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "A tiny Flux implementation for Javascript/React app",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
@@ -12,11 +12,7 @@
   "files": [
     "dist",
     "react",
-    "src",
-    "loadable",
-    "epic",
-    "store",
-    "reactotron"
+    "src"
   ],
   "bugs": {
     "url": "https://github.com/linq2js/tenx/issues"
