@@ -84,7 +84,7 @@ const storeModel = {
       return filterTodos(state.todos, "active");
     },
     completedTodoCount(state) {
-      return filterTodos(state.todos, "complted");
+      return filterTodos(state.todos, "completed");
     },
     hasCompletedTodos(state) {
       return state.todos.some((todo) => todo.completed);
@@ -92,6 +92,22 @@ const storeModel = {
     visibleTodos(state) {
       return filterTodos(state.todos, state.filter);
     },
+    // computed state can depend on other computed states or static states
+    stats: [
+      // other computed states
+      "activeTodoCount",
+      "completedTodoCount",
+      // static state
+      "todos",
+      // combiner,
+      function (activeTodos, completedTodos, allTodos) {
+        return {
+          active: activeTodos.length,
+          completed: completedTodos.length,
+          total: allTodos.length,
+        };
+      },
+    ],
   },
 };
 ```
