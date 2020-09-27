@@ -35,7 +35,7 @@ export default function createComponentStore(model) {
       };
     }
     useEffect(() => {
-      return data.store.when("#render", data.handleChange);
+      return data.store.onChange( data.handleChange);
     }, [data.store]);
     useEffect(() => {
       data.isRendering = false;

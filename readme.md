@@ -62,3 +62,40 @@ const storeModel = {
   },
 };
 ```
+
+## Derived/computed state
+
+Looking through the example you have probably noticed these:
+
+```jsx
+function filterTodos(todos, filter) {
+  if (filter === "all") return todos;
+  if (filter === "active") return todos.filter((todo) => !todo.completed);
+  return todos.filter((todo) => todo.completed);
+}
+
+const storeModel = {
+  state: {
+    todos: [],
+    filter: "all",
+  },
+  computed: {
+    activeTodoCount(state) {
+      return filterTodos(state.todos, "active");
+    },
+    completedTodoCount(state) {
+      return filterTodos(state.todos, "complted");
+    },
+    hasCompletedTodos(state) {
+      return state.todos.some((todo) => todo.completed);
+    },
+    visibleTodos(state) {
+      return filterTodos(state.todos, state.filter);
+    },
+  },
+};
+```
+
+Our state tree is concerned with state values that you will change using actions.
+But you can also automatically produce state values based on existing state.
+It uses the todos and filter state to figure out what todos to actually display.

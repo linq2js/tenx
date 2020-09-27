@@ -48,3 +48,26 @@ test("async dynamic state", async () => {
   await store.delay(15);
   expect(ds.value).toBe(2);
 });
+
+test("optimize change emitting", () => {
+  const callback = jest.fn();
+  const store = tenx({
+    state: {
+      count1: 1,
+      count2: 2,
+    },
+    action: {
+      increase(store) {
+        store.count1++;
+        store.count2++;
+      },
+    },
+  });
+
+  store.onChange(callback);
+  store.count1++;
+  store.count2++;
+  expect(callback).toBeCalledTimes(2);
+  store.increase();
+  expect(callback).toBeCalledTimes(3);
+});

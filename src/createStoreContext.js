@@ -9,9 +9,9 @@ export default function createStoreContext(store) {
   function onStateChanged() {
     context.changedToken = {};
     context.stateObject = undefined;
-    context.emitter.emit("change", { store });
+
     if (!globalContext.dispatchScopes) {
-      context.emitter.emit("render", { store });
+      context.emitter.emit("change", { store });
     }
   }
 
@@ -29,6 +29,7 @@ export default function createStoreContext(store) {
     cache,
     staticStates: {},
     stateEntries: {},
+    stateMap: createArrayKeyedMap(),
     childStores: {},
     actions: {},
     defaultSelectors: {},

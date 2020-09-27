@@ -29,7 +29,7 @@ export default function dispatchAction(
           // there are some changes since last time
           if (changedToken !== context.changedToken) {
             // emit render event for updating UI
-            context.emitter.emit("render", { store });
+            context.emitter.emit("change", { store });
           }
         });
     }
@@ -72,7 +72,7 @@ export default function dispatchAction(
       !globalContext.dispatchScopes
     ) {
       // emit render event for updating UI
-      context.emitter.emit("render", { store });
+      context.emitter.emit("change", { store });
     }
   }
 }

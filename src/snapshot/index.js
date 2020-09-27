@@ -56,7 +56,7 @@ export default function snapshot() {
           store.create();
         }
         if (autoCreate) {
-          parent.when("#render", () => store.create());
+          parent.onChange(() => store.create());
         }
       },
       create(store) {

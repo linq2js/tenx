@@ -49,7 +49,7 @@ export default function useStore(store, selector) {
   }
 
   useEffect(() => {
-    return data.store.when("#render", data.handleChange);
+    return data.store.onChange(data.handleChange);
   }, [data.store]);
 
   data.current = data.select();

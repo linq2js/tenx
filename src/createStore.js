@@ -149,14 +149,26 @@ export default function createStore(
     return context.stateObject;
   }
 
+  function createStateEntry(initial) {
+    return createState(
+      initial,
+      context.onStateChanged,
+      context.onAsyncStateChanged,
+      handleAsyncState
+    );
+  }
+
   function get(name) {
-    let stateEntry = context.stateEntries[name];
-    if (!stateEntry) {
-      context.stateEntries[name] = stateEntry = createState(
-        undefined,
-        context.onStateChanged,
-        context.onAsyncStateChanged,
-        handleAsyncState
+    let stateEntry;
+    if (arguments.length === 1 && typeof arguments[0] === "string") {
+      stateEntry = context.stateEntries[name];
+      if (!stateEntry) {
+        context.stateEntries[name] = stateEntry = createStateEntry();
+      }
+    } else {
+      stateEntry = context.stateMap.getOrAdd(
+        Array.from(arguments),
+        createStateEntry
       );
     }
     return stateEntry;
@@ -186,12 +198,7 @@ export default function createStore(
     modelVersion++;
     if (nextModel.state) {
       Object.entries(nextModel.state).forEach(([name, initial]) => {
-        const stateEntry = createState(
-          initial,
-          context.onStateChanged,
-          context.onAsyncStateChanged,
-          handleAsyncState
-        );
+        const stateEntry = createStateEntry(initial);
         context.staticStates[name] = context.stateEntries[name] = stateEntry;
         defineProp(
           name,
