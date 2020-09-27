@@ -18,7 +18,7 @@ const storeModel = {
   action: {
     // store action is pure action, the first action argument is store object
     increase(store) {
-      // we can mutate count state easily
+      // we can use store object to mutate count state easily
       store.count++;
     },
   },
@@ -37,5 +37,28 @@ const App = () => {
       <button onClick={() => increase()}>Increase</button>
     </>
   );
+};
+```
+
+## Handle async action
+
+With TENX, you can handle async action without any effort, no thunk, no middleware needed
+
+```jsx
+const storeModel = {
+  state: {
+    count: 0,
+  },
+  action: {
+    increase(store) {
+      store.count++;
+    },
+    async increaseAsync(store) {
+      // store provides delay util
+      await store.delay(1000);
+      // dispatch increase action after 1000ms
+      store.increase();
+    },
+  },
 };
 ```
