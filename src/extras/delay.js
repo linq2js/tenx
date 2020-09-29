@@ -7,8 +7,5 @@ export default function delay(ms = 0, value) {
     (resolve) => (timerId = setTimeout(resolve, ms, value))
   );
   promise.cancel = () => clearTimeout(timerId);
-  if (globalContext.generator) {
-    return new Yield("wait", promise);
-  }
   return promise;
 }

@@ -26,7 +26,13 @@ export default function createActionContext({
     emitter,
     dispatch,
     latest,
-    delay,
+    delay() {
+      const promise = delay(...arguments);
+      if (globalContext.generator) {
+        return new Yield("wait", promise);
+      }
+      return promise;
+    },
     debounce,
     fork,
     when,

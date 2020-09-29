@@ -1,4 +1,4 @@
-import { State } from "../index";
+import { Cancellable, State } from "../index";
 
 export function array<T = any>(
   initial: T[],
@@ -52,6 +52,19 @@ export interface EntityState<T> extends State<T> {
 }
 
 export function shallowMemo<T>(oldValue: T, newValue: T): T;
+
+export function delay(ms?: number): Promise<any>;
+
+export function cancellable<T>(target: Promise<T>): Promise<T> & Cancellable;
+export function cancellable<TFunc extends (...args: any[]) => any>(
+  func: TFunc
+): (
+  ...args: Parameters<TFunc>
+) => Promise<PromiseResolved<ReturnType<TFunc>>> & Cancellable;
+
+export type PromiseResolved<T> = T extends Promise<infer TResolved>
+  ? TResolved
+  : never;
 
 export interface EntitySetState<TEntity, TId>
   extends State<{ entities: { [key: string]: TEntity }; ids: TId[] }> {

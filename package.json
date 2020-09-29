@@ -1,6 +1,6 @@
 {
   "name": "tenx",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "A Flux implementation for Javascript/React app",
   "main": "dist/index.js",
   "types": "src/index.d.ts",
@@ -12,7 +12,8 @@
   "files": [
     "dist",
     "react",
-    "src"
+    "src",
+    "extras"
   ],
   "bugs": {
     "url": "https://github.com/linq2js/tenx/issues"
