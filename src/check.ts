@@ -1,100 +1,78 @@
-import tenx, { Action, Computed, State, WatchArgs } from "./index";
-import hookFactory from "./react";
+import tenx, { ActionContext, State } from "./index";
+import { ArrayState, entitySet, EntitySetState, EntityState } from "./extras";
+import { componentStore } from "./react";
 
-interface CounterStoreModel {
-  count: State<number>;
-  increase: Action<number, number>;
-  doubleCount: Computed<number>;
+interface Todo {
+  id: string;
+  title: string;
+  completed: boolean;
 }
 
-const store = tenx<CounterStoreModel>({
-  state: {
-    count: 10,
-  },
+const useCompStore = componentStore({ count: 0 });
+
+const counterStore = tenx({
+  count: 0,
+  todos: undefined as ArrayState<string>,
+  data: undefined as EntityState<{ [key: string]: any }>,
+  todos2: entitySet(undefined as Todo[], (todo) => todo.id),
   computed: {
-    doubleCount() {
-      return 100;
-    },
-  },
-  action: {
-    increase(store, payload) {
-      console.log(store.state, payload);
-      return 1;
-    },
-  },
-  when: {
-    click(args) {
-      console.log(args.store);
-    },
-  },
-  watch: {
-    "count,doubleCount"(
-      args: WatchArgs<CounterStoreModel, { count: number; doubleCount: number }>
-    ) {
-      console.log(args.current.doubleCount);
+    doubleCount(state): number {
+      return state.count * 2;
     },
   },
 });
 
-const useMyStore = hookFactory.shared(store);
-const useOtherStore = hookFactory.component<CounterStoreModel>({
-  state: {
-    count: 10,
-  },
-  computed: {
-    doubleCount() {
-      return 100;
-    },
-  },
-  action: {
-    increase(store, payload) {
-      console.log(store, payload);
-      return 1;
-    },
-  },
-  when: {
-    click(args) {
-      console.log(args.store);
-    },
-  },
-  watch: {
-    "count,doubleCount"(
-      args: WatchArgs<CounterStoreModel, { count: number; doubleCount: number }>
-    ) {
-      console.log(args.current.doubleCount);
-    },
-  },
-});
+function Add(
+  {
+    count,
+    todos,
+    todos2,
+    data,
+  }: ActionContext<{
+    count: State<number>;
+    todos: ArrayState<string>;
+    todos2: EntitySetState<Todo, string>;
+    data: EntityState<{ [_: string]: any }>;
+  }>,
+  _: number
+) {
+  count.value++;
+  todos.push("aaa");
+  data.unset("");
+  todos2.merge({
+    id: "111",
+  });
+  todos2.update({
+    id: "111",
+    completed: true,
+    title: "aaa",
+  });
 
-function App() {
-  const result1 = useMyStore((store) => ({
-    doubleCount: store.doubleCount,
-  }));
-  const result2 = useOtherStore();
-  console.log(result1.doubleCount, result2.doubleCount);
+  const { count: count1 } = useCompStore();
+  console.log(count1.value);
+
+  return 1;
+}
+
+function* Saga() {
+  return 100;
 }
 
 console.log(
-  App,
-  store.watch(
-    (x) => x.count,
-    (a) => a.current
-  ),
-  store.watch(
-    (x) => ({ a: x.count, y: x.doubleCount }),
-    (x) => x.current.a
-  ),
-  store.watch("count"),
-  store.watch("count", (a) => a.current),
-  store.when("aaa").then,
-  store.when("aaa", () => {}),
-  store.delay(100),
-  store.dispatch("increase2"),
-  store.dispatch("count"),
-  store.count,
-  store.doubleCount,
-  store.increase(),
-  store.increase.fork,
-  store.state.count,
-  store.state.doubleCount
+  counterStore.get<number>("name").loadable.value,
+  counterStore.watch("count", function (args) {
+    return args.current + 1;
+  }),
+  counterStore.doubleCount.toExponential(),
+  counterStore.count,
+  counterStore.todos.length,
+  counterStore.todos.map((x) => x),
+  counterStore.state.count,
+  counterStore.data.name,
+  counterStore.dispatch(Add),
+  counterStore.dispatch(Add, 100).toExponential(),
+  counterStore.dispatch(Saga).cancel(),
+  counterStore.dispatch(Saga).async,
+  counterStore.dispatch(Saga).result,
+  counterStore.when("*", (args) => args.action.type).length
 );

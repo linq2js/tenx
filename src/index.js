@@ -1,1 +1,3 @@
-export { default } from "./createStore";
+import createStore from "./createStore";
+
+export default createStore;

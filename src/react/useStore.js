@@ -1,60 +1,59 @@
 import { useEffect, useRef, useState } from "react";
 import createArrayKeyedMap from "../createArrayKeyedMap";
-import globalContext from "../globalContext";
 import isEqual from "../isEqual";
+import isPromiseLike from "../isPromiseLike";
+import callbackFactory from "./callbackFactory";
 
 export default function useStore(store, selector) {
   const data = useRef({}).current;
-  data.rerender = useState(undefined)[1];
   data.selector = selector;
+  data.rerender = useState(undefined)[1];
   if (data.store !== store) {
     data.store = store;
-    data.error = undefined;
     data.cache = createArrayKeyedMap();
-    data.select = () => {
+    data.selectContext = {
+      dispatch: data.store.dispatch,
+      callback: callbackFactory(),
+    };
+    data.checkStoreReady = () => {
       if (data.store.loading) {
         if (data.store.error) throw data.store.error;
-        if (data.handledLoadingPromise !== data.store.__loadingPromise) {
-          data.handledLoadingPromise = data.store.__loadingPromise;
-          data.handledLoadingPromise.then(data.handleChange);
-        }
-        throw data.store.__loadingPromise;
-      }
-      try {
-        globalContext.render = {
-          cache: data.cache,
-        };
-        data.cache.hookIndex = 0;
-        return data.selector(data.store);
-      } catch (error) {
-        data.error = error;
-      } finally {
-        if (
-          typeof data.prevHookIndex !== "undefined" &&
-          data.prevHookIndex !== data.cache.hookIndex
-        ) {
-          data.error = new Error("Invalid hook usage");
-        }
-        data.prevHookIndex = data.cache.hookIndex;
-        globalContext.render = undefined;
+        throw data.store.__initPromise;
       }
     };
-    data.handleChange = () => {
+    data.select = function () {
       data.error = undefined;
+      data.cache.hookIndex = 0;
+      try {
+        data.checkStoreReady();
+        return data.selector
+          ? data.selector(data.store.__displayContext, data.selectContext)
+          : data.store.state;
+      } catch (error) {
+        if (isPromiseLike(error)) {
+          // re-render when promise done
+          if (!data.cache.get(error)) {
+            data.cache.set(error, true);
+            error.finally(data.handleChange);
+          }
+        }
+        data.error = error;
+      }
+    };
+    data.handleChange = function () {
       const next = data.select();
-      // noinspection PointlessBooleanExpressionJS
-      if (!data.error && isEqual(next, data.current)) return;
+      if (!data.error && isEqual(next, data.prev)) return;
       data.rerender({});
     };
   }
 
   useEffect(() => {
-    return data.store.onChange(data.handleChange);
-  }, [data.store]);
-
-  data.current = data.select();
-
+    data.store.when("update", data.handleChange);
+  }, [data, store]);
+  // an error captured from handleChange()
   if (data.error) throw data.error;
-
-  return data.current;
+  data.prev = data.select();
+  // an error captured from select()
+  if (data.error) throw data.error;
+  return data.prev;
 }

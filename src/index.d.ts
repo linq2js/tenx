@@ -1,184 +1,179 @@
-export default function tenx<TModel = any>(
-  model?: ModelInfer<TModel>
-): Store<TModel>;
+export default function tenx<TState = {}>(
+  state?: TState,
+  options?: StoreOptions<TState>
+): Store<TState>;
 
-export interface StoreBase<TModel> {
-  state: StoreStateInfer<TModel>;
-  get<TValue = any>(name: string): DynamicState<TValue>;
-
-  dispatch<ActionName extends keyof StoreActionPayloadInfer<TModel>>(
-    type: ActionName | string,
-    payload?: StoreActionPayloadInfer<TModel>[ActionName]
-  ): any;
-  delay(ms?: number): Promise<any>;
-
-  when(
-    action: string,
-    listener: Listener<DispatchArgs<TModel>>
-  ): RemoveListener;
-  when(action: string): Promise<DispatchArgs<TModel>>;
-
-  watch<TProp extends keyof StoreStateInfer<TModel>>(
-    prop: TProp,
-    callback: Listener<WatchArgs<TModel, StoreStateInfer<TModel>[TProp]>>
-  ): RemoveListener;
-  watch<TValue extends {}>(
-    props: (keyof TValue)[],
-    callback: Listener<WatchArgs<TModel, TValue>>
-  ): RemoveListener;
-  watch<TValue>(
-    selector: (store: Store<TModel>) => TValue,
-    callback: Listener<WatchArgs<TModel, TValue>>
-  ): RemoveListener;
-  watch<TProp extends keyof StoreStateInfer<TModel>>(
-    prop: TProp
-  ): Promise<WatchArgs<TModel, StoreStateInfer<TModel>[TProp]>>;
-  watch<TValue extends {}>(
-    props: (keyof TValue)[]
-  ): Promise<WatchArgs<TModel, TValue>>;
-  watch<TValue>(
-    selector: (store: Store<TModel>) => TValue
-  ): Promise<WatchArgs<TModel, TValue>>;
-
-  onChange(listener: Listener<ChangeArgs<TModel>>): RemoveListener;
-  onDispatch(listener: Listener<DispatchArgs<TModel>>): RemoveListener;
-
-  cache<T>(data: T, ...keys: any[]): T;
+export interface State<T> extends Loadable<T> {
+  value: T;
+  readonly loadable: Loadable<T>;
 }
 
-export interface StoreExtras {
-  debounce(ms?: number): void;
+export interface ActionContextApi<TState> {
+  dispatch: Dispatcher;
+  when: When<TState>;
+  latest(): void;
+  delay(ms?: number): Promise<void>;
+  debounce(ms?: number): Promise<void>;
+  fork: Dispatcher;
+  mutate: Mutate;
+  get: Get;
 }
 
-export type State<TValue> = { type: "state"; valueType: TValue };
+export interface Loadable<T> {
+  readonly value: T;
+  readonly error: any;
+  readonly status: "loading" | "hasError" | "hasValue";
+  readonly promise: Promise<any>;
+}
 
-export type Action<TPayload = never, TReturn = void> = {
-  type: "action";
-  payloadType: TPayload;
-  returnType: TReturn;
-};
+export type ActionContext<TStateBag = StateBag, TState = {}> = ActionContextApi<
+  TState
+> &
+  TStateBag;
 
-export type Watch<TModel> = { [key: string]: Listener<WatchArgs<TModel, any>> };
-export type When<TModel> = { [key: string]: Listener<DispatchArgs<TModel>> };
+export interface StateBag {
+  [key: string]: State<any>;
+}
+
+export interface StoreOptions<TState> {
+  init?(context: ActionContext): any;
+}
+
+export type Store<TState> = StoreBase<TState> & AccessibleStateValues<TState>;
+
+export type AccessibleStateValues<TState> = StaticStateValues<
+  Omit<TState, "computed">
+> &
+  ComputedStateValues<TState>;
+
+export interface StoreBase<TState> {
+  readonly state: AccessibleStateValues<TState>;
+  readonly loading: boolean;
+  readonly error: boolean;
+  dispatch: Dispatcher;
+  when: When<TState>;
+  get: Get;
+  watch: Watch<TState>;
+}
+
+export type Get = <T = any>(name: string) => State<T>;
+
+export interface Mutate {
+
+}
+
+export type Dispatcher = <TAction>(
+  action: TAction,
+  payload?: ActionPayload<TAction>
+) => ActionReturn<TAction>;
 
 export type RemoveListener = () => void;
 
-export type Computed<TValue = any> = { type: "computed"; valueType: TValue };
+export interface When<TState> {
+  (action: "*" | Function | Function[]): Promise<ActionInfo> & Cancellable;
+  (action: "change"): Promise<ChangeArgs<TState>> & Cancellable;
+  (action: "update"): Promise<UpdateArgs<TState>> & Cancellable;
+  (action: "dispatch"): Promise<DispatchArgs<TState>> & Cancellable;
 
-export type ModelInfer<TModel> =
-  | ModelOptions<TModel>
-  | (ModelStateInfer<TModel> &
-      ModelActionInfer<TModel> &
-      ModelComputedInfer<TModel> &
-      ModelChildrenInfer<TModel>);
+  (
+    action: "*" | Function | Function[],
+    listener: Listener<DispatchArgs<TState>>
+  ): RemoveListener;
+  (action: "change", listener: Listener<ChangeArgs<TState>>): RemoveListener;
+  (action: "update", listener: Listener<UpdateArgs<TState>>): RemoveListener;
+  (
+    action: "dispatch",
+    listener: Listener<DispatchArgs<TState>>
+  ): RemoveListener;
+}
 
-export type Store<TModel> = StoreBase<TModel> &
-  { [key in keyof TModel]: StorePropInfer<TModel[key]> };
+export type KeyOf<T> = keyof T;
 
-export type StorePropInfer<TType> = TType extends Action<
-  infer TPayload,
-  infer TReturn
->
-  ? Dispatcher<TPayload, TReturn>
-  : TType extends State<infer TValue>
-  ? TValue
-  : TType extends Computed<infer TValue>
-  ? TValue
+export interface Watch<TState> {
+  <TKey extends KeyOf<AccessibleStateValues<TState>>>(
+    prop: TKey,
+    callback: Listener<WatchArgs<TState, WatchValue<TState, TKey>>>
+  ): RemoveListener;
+
+  <TValue = { [key in keyof TState]: TState[key] }, TKey = keyof TState>(
+    props: TKey[],
+    callback: Listener<WatchArgs<TState, TValue>>
+  ): RemoveListener;
+}
+
+export type WatchValue<
+  TState,
+  TKey extends KeyOf<AccessibleStateValues<TState>>
+> = AccessibleStateValues<TState>[TKey];
+
+export type Listener<T> = (args: T) => any;
+
+export interface ActionInfo {
+  readonly type: Function;
+  readonly payload: any;
+}
+
+export interface ChangeArgs<TState> {
+  readonly store: Store<TState>;
+}
+
+export interface WatchArgs<TState, TValue> {
+  readonly store: Store<TState>;
+  readonly current: TValue;
+  readonly previous: TValue;
+}
+
+export interface UpdateArgs<TState> {
+  readonly store: Store<TState>;
+}
+
+export interface DispatchArgs<TState> {
+  readonly action: ActionInfo;
+  readonly store: Store<TState>;
+}
+
+export type ActionPayload<TAction> = TAction extends (
+  context?: any,
+  payload?: infer TPayload
+) => any
+  ? TPayload
   : never;
 
-export interface Dispatcher<TPayload, TReturn> extends Function {
-  (payload?: TPayload): TReturn;
-  fork(payload?: TPayload): TReturn;
+export interface Task<T = any> extends Promise<T>, Cancellable {
+  readonly async: boolean;
+  readonly result: T;
 }
 
-export interface ModelOptions<TModel> {
-  when?: When<TModel>;
-  watch?: Watch<TModel>;
+export interface Cancellable {
+  cancel(): void;
 }
 
-export type StoreStateInfer<TModel> =
-  | {
-      [key in keyof TModel]: TModel[key] extends State<infer TValue>
-        ? TValue
-        : never;
+export type ActionReturn<TAction> = TAction extends (
+  ...args: any[]
+) => infer TReturn
+  ? TReturn extends Generator<any, infer TResult>
+    ? Task<TResult>
+    : TReturn
+  : void;
+
+export type StaticStateValues<TState> = {
+  [key in keyof TState]: TState[key] extends State<infer TValue>
+    ? TValue extends Array<infer TItem>
+      ? ReadonlyArray<TItem>
+      : TValue extends {}
+      ? Readonly<TValue>
+      : TValue
+    : TState[key];
+};
+
+export type ComputedStateValues<TState> = TState extends {
+  computed: infer TComputed;
+}
+  ? {
+      [key in keyof TComputed]: TComputed[key] extends (
+        ...args: any[]
+      ) => infer TReturn
+        ? TReturn
+        : any;
     }
-  | {
-      [key in keyof TModel]: TModel[key] extends Computed<infer TValue>
-        ? TValue
-        : never;
-    };
-
-export type ModelStateInfer<TModel> = {
-  state: {
-    [key in keyof TModel]?: TModel[key] extends State<infer TValue>
-      ? TValue
-      : never;
-  };
-};
-
-export type ModelActionInfer<TModel> = {
-  action: {
-    [key in keyof TModel]?: TModel[key] extends Action<
-      infer TPayload,
-      infer TReturn
-    >
-      ? (
-          store?: Store<TModel> & StoreExtras,
-          payload?: TPayload
-        ) => Generator | TReturn
-      : never;
-  };
-};
-
-export type ModelComputedInfer<TModel> = {
-  computed: {
-    [key in keyof TModel]?: TModel[key] extends Computed<infer TValue>
-      ? ((store: Store<TModel>) => TValue) | [...(string | Function)[]]
-      : never;
-  };
-};
-
-export type ModelChildrenInfer<TModel> = {
-  children: {
-    [key in keyof TModel]?: TModel[key] extends Store<infer TValue>
-      ? TValue
-      : never;
-  };
-};
-
-export type StoreActionPayloadInfer<TModel> = {
-  [key in keyof TModel]: TModel[key] extends Action<infer TPayload, any>
-    ? TPayload
-    : never;
-};
-
-export interface Loadable<T = any> {
-  readonly status: "loading" | "hasValue" | "hasError";
-  readonly value: T;
-  readonly error: any;
-}
-
-export interface DynamicState<T> extends Loadable<T> {
-  value: T;
-  readonly loadable: Loadable<T>;
-  mutate(value: T): void;
-  mutate(promise: Promise<T>, reducer: (resolved?: T, current?: T) => T): void;
-  mutate(reducer: (current: T) => T): void;
-}
-
-export type Listener<T> = (args?: T) => any;
-
-export interface StoreListenerArgs<TModel> {
-  store: Store<TModel>;
-}
-
-export type DispatchArgs<TModel> = StoreListenerArgs<TModel> & {
-  action: { type: string; payload: any };
-};
-
-export type ChangeArgs<TModel> = StoreListenerArgs<TModel>;
-
-export type WatchArgs<TModel, TValue> = StoreListenerArgs<TModel> & {
-  current: TValue;
-  previous: TValue;
-};
+  : {};

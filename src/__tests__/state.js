@@ -1,73 +1,113 @@
 import tenx from "../index";
 
-const model = {
-  state: {
-    count: 0,
-  },
-};
-
-let store;
-
-beforeEach(() => {
-  store = tenx(model);
-});
-
-test("mutate state", () => {
-  store.count++;
-  expect(store.count).toBe(1);
-  store.get("count").value++;
-  expect(store.count).toBe(2);
-});
-
-test("get state", () => {
-  const s1 = store.state;
-  store.count++;
-  const s2 = store.state;
-  expect(s1).not.toBe(s2);
-  expect(s1).toEqual({ count: 0 });
-  expect(s2).toEqual({ count: 1 });
-});
-
-test("sync dynamic state", () => {
-  const ds = store.get("something");
-  expect(ds.value).toBeUndefined();
-  ds.value = 100;
-  expect(ds.value).toBe(100);
-});
-
-test("async dynamic state", async () => {
-  const ds = store.get("something");
-  expect(ds.value).toBeUndefined();
-  ds.mutate(store.delay(10).then(() => 1));
-  expect(ds.value).toBeUndefined();
-  await store.delay(15);
-  expect(ds.value).toBe(1);
-
-  ds.mutate(store.delay(10).then(() => 1));
-  ds.mutate(store.delay(5).then(() => 2));
-  await store.delay(15);
-  expect(ds.value).toBe(2);
-});
-
-test("optimize change emitting", () => {
-  const callback = jest.fn();
+test("mutate single state", () => {
+  const events = [];
   const store = tenx({
-    state: {
-      count1: 1,
-      count2: 2,
-    },
-    action: {
-      increase(store) {
-        store.count1++;
-        store.count2++;
+    count: 0,
+  });
+  const Increase = ({ count }, by = 1) => {
+    count.value += by;
+  };
+  store.when("dispatch", () => events.push("dispatch"));
+  store.when("change", () => events.push("change"));
+  store.when("update", () => events.push("update"));
+  store.dispatch(Increase, 1);
+  store.dispatch(Increase, 2);
+  expect(events).toEqual([
+    "dispatch",
+    "change",
+    "update",
+    "dispatch",
+    "change",
+    "update",
+  ]);
+  expect(store.state).toEqual({
+    count: 3,
+  });
+});
+
+test("nested action dispatching", () => {
+  const store = tenx({
+    count: 0,
+  });
+  const Increase = ({ count }) => count.value++;
+  const Triple = ({ dispatch }) => {
+    dispatch(Increase);
+    dispatch(Increase);
+    dispatch(Increase);
+  };
+  const events = [];
+  store.when("dispatch", () => events.push("dispatch"));
+  store.when("change", () => events.push("change"));
+  store.when("update", () => events.push("update"));
+  store.dispatch(Triple, 1);
+  expect(events).toEqual([
+    "dispatch", // increase
+    "dispatch", // increase
+    "dispatch", // increase
+    "dispatch", // increase
+    "change",
+    "update",
+  ]);
+  expect(store.state).toEqual({
+    count: 3,
+  });
+});
+
+test("mutate multiple states", () => {
+  const store = tenx({
+    value1: 1,
+    value2: 2,
+    value3: 3,
+  });
+  const ChangeValues = ({ mutate, value1, value2, value3 }, payload) => {
+    mutate(
+      {
+        value1,
+        value2,
       },
-    },
+      payload
+    );
+  };
+  const events = [];
+  store.when("dispatch", () => events.push("dispatch"));
+  store.when("change", () => events.push("change"));
+  store.when("update", () => events.push("update"));
+
+  store.dispatch(ChangeValues, {});
+  expect(events).toEqual(["dispatch"]);
+
+  store.dispatch(ChangeValues, { value1: 2, value2: 2 });
+  expect(events).toEqual(["dispatch", "dispatch", "change", "update"]);
+
+  store.dispatch(ChangeValues, { value1: 2, value2: 2 });
+  expect(events).toEqual([
+    "dispatch",
+    "dispatch",
+    "change",
+    "update",
+    "dispatch",
+  ]);
+});
+
+test("enhancer", () => {
+  const array = (initial = []) => (state) => {
+    state.value = initial;
+
+    state.push = (value) => {
+      state.value = state.value.concat(value);
+    };
+
+    return state;
+  };
+  const store = tenx({
+    todos: array(["item 1"]),
   });
 
-  store.onChange(callback);
-  store.count1++;
-  store.count2++;
-  expect(callback).toBeCalledTimes(2);
-  store.increase();
-  expect(callback).toBeCalledTimes(3);
+  const add = ({ todos }, title) => todos.push(title);
+
+  expect(store.todos).toEqual(["item 1"]);
+  store.dispatch(add, "item 2");
+  store.dispatch(add, "item 3");
+  expect(store.todos).toEqual(["item 1", "item 2", "item 3"]);
 });

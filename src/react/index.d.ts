@@ -1,31 +1,41 @@
-import { ModelInfer, Store } from "../index";
+import {
+  AccessibleStateValues,
+  ActionContext,
+  Dispatcher,
+  Loadable,
+  StateBag,
+  Store,
+} from "../index";
 
-declare const hookFactory: HookFactory;
+export function useStore<TState>(
+  store: Store<TState>
+): AccessibleStateValues<TState>;
+export function useStore<TState, TResult = any>(
+  store: Store<TState>,
+  selector: (
+    state?: DisplayableStateValues<TState>,
+    context?: UseStoreContext<TState>
+  ) => TResult
+): TResult;
 
-export default hookFactory;
+export function componentStore<TState>(
+  state: TState
+): UseComponentStore<TState>;
 
-export interface HookFactory {
-  shared<TModel>(store: Store<TModel>): SharedStoreHook<TModel>;
-  shared<TModel>(model: ModelInfer<TModel>): SharedStoreHook<TModel>;
-  component<TModel>(
-    model: ModelInfer<TModel>,
-    options?: ComponentStoreHookOptions
-  ): ComponentStoreHook<TModel>;
+export type UseComponentStore<TState> = (
+  key?: any
+) => ActionContext<StateBag, TState> & { callback: CallbackFactory };
+
+export interface UseStoreContext<TState> {
+  dispatch: Dispatcher;
+  callback: CallbackFactory;
 }
 
-export interface ComponentStoreHookOptions {
-  key?: string;
-  cache?: {};
-}
+export type DisplayableStateValues<TState> = AccessibleStateValues<TState> & {
+  get<T = any>(name: string): Loadable<T>;
+};
 
-export interface SharedStoreHook<TModel> extends Function {
-  <TResult>(selector: (store: Store<TModel>) => TResult): TResult;
-}
-
-export interface ComponentStoreHook<TModel> extends Function {
-  (): Store<TModel> & ComponentStore;
-}
-
-export interface ComponentStore {
-  stateReady(): boolean;
-}
+export type CallbackFactory = <TResult>(
+  fn: () => TResult,
+  ...keys: any[]
+) => TResult;

@@ -1,111 +1,80 @@
-import isPromiseLike from "./isPromiseLike";
-import globalContext from "./globalContext";
+import isEqual from "./isEqual";
 
-export default function createState(
-  initial,
-  onChange,
-  onAsyncChange,
-  handleAsync
-) {
+export default function createState(initial, onValueChange, onStatusChange) {
   const props = {
-    value: undefined,
-    status: "hasValue",
-    error: undefined,
-    loadable: undefined,
-    promise: undefined,
+    value: initial,
+    changeToken: undefined,
+    loadableToken: undefined,
   };
-
-  function mutate(nextValue, reducer, async) {
-    if (typeof nextValue === "function") {
-      nextValue = nextValue(props.value);
-    }
-
-    if (isPromiseLike(nextValue)) {
-      if (nextValue === props.promise) return;
-      props.promise = nextValue;
-      props.status = "loading";
-      props.loadable = undefined;
-      props.error = undefined;
-      onChange();
-      return nextValue.then(
-        (value) => {
-          if (props.promise !== nextValue) {
-            return;
-          }
-          if (typeof reducer === "function") {
-            value = reducer(value, props.value);
-          }
-          mutate(value, reducer, true);
-        },
-        (error) => {
-          if (props.promise !== nextValue) {
-            return;
-          }
-          // TODO: need to consider to assign current value to undefined if there is an error
-          // props.value = undefined;
-          props.status = "hasError";
-          props.error = error;
-          props.loadable = undefined;
-          onAsyncChange();
-        }
-      );
-    }
-    if (nextValue === props.value) return;
-    props.status = "hasValue";
-    props.loadable = undefined;
-    props.value = nextValue;
-    props.error = undefined;
-    props.promise = undefined;
-
-    if (async) {
-      onAsyncChange();
-    } else {
-      onChange();
-    }
-  }
-
-  mutate(initial);
 
   return {
     get value() {
-      if (props.status === "loading") {
-        if (handleAsync) {
-          handleAsync(props.promise);
-        } else if (globalContext.render) {
-          throw props.promise;
-        }
-      }
-      if (props.status === "hasError") throw props.error;
-
       return props.value;
     },
+    get loadable() {
+      if (!props.loadable || props.loadableToken !== props.changeToken) {
+        props.loadableToken = props.changeToken;
+        const next = {
+          value: props.value,
+          error: props.error,
+          status: props.promise
+            ? "loading"
+            : props.error
+            ? "hasError"
+            : "hasValue",
+        };
+
+        if (!isEqual(next, props.loadable)) {
+          props.loadable = next;
+        }
+      }
+      return props.loadable;
+    },
     set value(value) {
-      mutate(value);
+      if (props.value === value) return;
+      props.value = value;
+      props.changeToken = {};
+      onValueChange();
+      if (props.promise || props.error) {
+        delete props.promise;
+        delete props.error;
+        onStatusChange();
+      }
+    },
+    get promise() {
+      return props.promise;
     },
     get error() {
       return props.error;
     },
-    get status() {
-      return props.status;
+    get displayValue() {
+      if (props.error) throw props.error;
+      if (props.promise) throw props.promise;
+      return props.value;
     },
-    get loadable() {
-      if (!props.loadable) {
-        props.loadable = {
-          status: props.status,
-          value: props.value,
-          error: props.error,
-        };
+    startUpdate(promise) {
+      if (promise === props.promise) return;
+      props.promise = promise;
+      props.error = undefined;
+      props.changeToken = {};
+      onStatusChange();
+    },
+    endUpdate(promise, value, error) {
+      if (props.promise !== promise) return false;
+      props.changeToken = {};
+      if (error) {
+        props.error = error;
+        onStatusChange();
+      } else {
+        if (typeof value === "function") {
+          value(this);
+        } else if (props.value !== value) {
+          props.value = value;
+          onValueChange();
+        }
+        onStatusChange();
       }
-      return props.loadable;
-    },
-    reset() {
-      mutate(initial);
-    },
-    mutate,
-    cancel() {
-      if (props.status !== "loading") return;
-      delete props.promise;
-      props.status = "hasValue";
+      return true;
     },
   };
 }

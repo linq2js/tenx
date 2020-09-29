@@ -1,5 +1,6 @@
 import globalContext from "./globalContext";
 import isPromiseLike from "./isPromiseLike";
+import wrapUpdate from "./wrapUpdate";
 import Yield from "./Yield";
 import isIteratorLike from "./isIteratorLike";
 
@@ -11,24 +12,14 @@ export default function processIterator(iterator, callback, context) {
   };
   const generatorContext = { next, last: context.last };
 
-  function wrap(callback) {
-    let changedToken;
-    try {
-      globalContext.generator = generatorContext;
-      changedToken = context.changedToken;
-      return callback();
-    } finally {
-      globalContext.generator = undefined;
-      if (changedToken !== context.changedToken) {
-        context.onStateChanged();
-      }
-    }
-  }
-
   function next(payload) {
     if (props.cancelled) return;
 
-    const { done, value } = wrap(() => iterator.next(payload));
+    const { done, value } = wrapUpdate(
+      () => iterator.next(payload),
+      () => (globalContext.generator = generatorContext),
+      () => (globalContext.generator = undefined)
+    );
     if (done) {
       if (callback) return callback(value);
       return;
@@ -117,12 +108,20 @@ export default function processIterator(iterator, callback, context) {
         !props.cancelled && callback(args.action);
       });
       unsubscribe && props.onCancel.push(unsubscribe);
-      return;
+      return {
+        cancel: unsubscribe,
+      };
     }
     if (isPromiseLike(target)) {
-      return target.then(
-        (resolved) => !props.cancelled && callback(resolved),
-        (error) => !props.cancelled && iterator.throw(error)
+      target.cancel && props.onCancel.push(target.cancel);
+      return Object.assign(
+        target.then(
+          (resolved) => !props.cancelled && callback(resolved),
+          (error) => !props.cancelled && iterator.throw(error)
+        ),
+        {
+          cancel: target.cancel,
+        }
       );
     }
     throw new Error("Invalid wait target");

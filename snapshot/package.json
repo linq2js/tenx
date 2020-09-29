@@ -1,5 +1,0 @@
-{
-  "main": "../dist/snapshot/index.js",
-  "module": "../dist/snapshot/index.js",
-  "types": "../src/snapshot/index.d.ts"
-}

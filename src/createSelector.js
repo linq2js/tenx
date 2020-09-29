@@ -80,6 +80,6 @@ export default function createSelector(selector, resolver) {
 
   throw new Error(
     "Invalid selector type. Expected Array | String | Function but got " +
-      typeof selector
+    typeof selector
   );
 }
