@@ -14,6 +14,7 @@ const render = () => {
   app.querySelector("#increase").onclick = () => store.dispatch(Increase);
 };
 store.when("update", render);
+render();
 ```
 
 ## Counter App using React
