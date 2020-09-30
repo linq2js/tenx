@@ -1,5 +1,10 @@
 import tenx, { StoreContext, State } from "./index";
-import { ArrayState, entitySet, EntitySetState, EntityState } from "../extras";
+import {
+  ArrayState,
+  entitySet,
+  EntitySetState,
+  EntityState,
+} from "../extras";
 import { componentStore } from "../react";
 
 interface Todo {
@@ -9,8 +14,7 @@ interface Todo {
 }
 
 const useCompStore = componentStore({ count: 0 });
-
-const counterStore = tenx({
+const model = {
   count: 0,
   todos: undefined as ArrayState<string>,
   data: undefined as EntityState<{ [key: string]: any }>,
@@ -19,8 +23,11 @@ const counterStore = tenx({
     doubleCount(state): number {
       return state.count * 2;
     },
+    doubleCount2: ["count", "count2", () => 100],
   },
-});
+};
+const counterStore = tenx(model);
+model.computed.doubleCount2.lastIndexOf("1");
 
 function Add(
   {
@@ -64,6 +71,7 @@ console.log(
     return args.current + 1;
   }),
   counterStore.doubleCount.toExponential(),
+  counterStore.doubleCount2.toExponential(),
   counterStore.count,
   counterStore.todos.length,
   counterStore.todos.map((x) => x),

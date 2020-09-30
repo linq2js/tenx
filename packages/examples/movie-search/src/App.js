@@ -10,10 +10,10 @@ const MovieResults = memo(function MovieResults() {
     next,
     prev,
     data: { page, results, total_pages, total_results },
-  } = useMovieStore((state, { callback, dispatch }) => ({
+  } = useMovieStore((state, { dispatch }) => ({
     data: state.results,
-    next: callback(() => dispatch(Next)),
-    prev: callback(() => dispatch(Prev)),
+    next: dispatch.get(Next),
+    prev: dispatch.get(Prev),
   }));
 
   if (!results.length) {
@@ -36,11 +36,13 @@ const MovieResults = memo(function MovieResults() {
           <div
             key={result.id}
             style={{
-              maxWidth: 400,
-              maxHeight: 120,
+              width: 320,
+              height: 115,
               overflow: "hidden",
               margin: "10px",
               border: "1px solid silver",
+              paddingRight: 5,
+              lineHeight: "20px",
             }}
           >
             <img
@@ -52,9 +54,6 @@ const MovieResults = memo(function MovieResults() {
             <h3>
               {result.vote_average} - {result.title} ({result.release_date})
             </h3>
-            <p style={{ minHeight: 100, textAlign: "justify" }}>
-              {result.overview}
-            </p>
           </div>
         ))}
       </div>
@@ -63,12 +62,10 @@ const MovieResults = memo(function MovieResults() {
 });
 
 export default function App() {
-  const { search, keyword } = useMovieStore(
-    (state, { callback, dispatch }) => ({
-      keyword: state.keyword,
-      search: callback((payload) => dispatch(Search, payload)),
-    })
-  );
+  const { search, keyword } = useMovieStore((state, { dispatch }) => ({
+    keyword: state.keyword,
+    search: dispatch.get(Search),
+  }));
 
   function handleChange(e) {
     search(e.target.value);
@@ -92,7 +89,7 @@ export default function App() {
             borderRadius: 5,
           }}
         />
-        <p></p>
+        <p />
       </form>
       <Suspense fallback={<div>Fetching...</div>}>
         <MovieResults />

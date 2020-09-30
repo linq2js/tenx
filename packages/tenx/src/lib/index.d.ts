@@ -177,18 +177,25 @@ export type ComputedStateValues<TState> = TState extends {
   computed: infer TComputed;
 }
   ? {
-      [key in keyof TComputed]: TComputed[key] extends (
-        ...args: any[]
-      ) => infer TReturn
-        ? TReturn
-        : any;
+      [key in keyof TComputed]: CombinerReturnType<
+        TComputed[key],
+        ComputedTuple<TComputed[key]>
+      >;
     }
   : {};
 
-export interface ComputedContext {
-  latest(): void;
-  debounce(ms?: number): Promise<void>;
-  cancel(): void;
-  cache<T>(fn: () => T, key: any, ...otherKeys: any[]): T;
-  cache<T>(value: T): T;
-}
+export type CombinerReturnType<T, TFallback = never> = T extends (
+  ...args: any[]
+) => infer TReturn
+  ? TReturn
+  : TFallback;
+
+export type ComputedTupleItem = string | Function | { [key: string]: any };
+
+export type ComputedTuple<T> = T extends [
+  ComputedTupleItem,
+  ComputedTupleItem,
+  infer TCombiner
+]
+  ? CombinerReturnType<TCombiner>
+  : any;

@@ -73,3 +73,57 @@ export interface EntitySetState<TEntity, TId>
   merge(...entities: Partial<TEntity>[]): void;
   remove(...ids: TId[]): void;
 }
+
+export function tuple<T1, T2>(p1: T1, p2: T2): [T1, T2];
+export function tuple<T1, T2, T3>(p1: T1, p2: T2, p3: T3): [T1, T2, T3];
+export function tuple<T1, T2, T3, T4>(
+  p1: T1,
+  p2: T2,
+  p3: T3,
+  p4: T4
+): [T1, T2, T3, T4];
+export function tuple<T1, T2, T3, T4, T5>(
+  p1: T1,
+  p2: T2,
+  p3: T3,
+  p4: T4,
+  p5: T5
+): [T1, T2, T3, T4, T5];
+export function tuple<T1, T2, T3, T4, T5, T6>(
+  p1: T1,
+  p2: T2,
+  p3: T3,
+  p4: T4,
+  p5: T5,
+  p6: T6
+): [T1, T2, T3, T4, T5, T6];
+export function tuple<T1, T2, T3, T4, T5, T6, T7>(
+  p1: T1,
+  p2: T2,
+  p3: T3,
+  p4: T4,
+  p5: T5,
+  p6: T6,
+  p7: T7
+): [T1, T2, T3, T4, T5, T6, T7];
+export function tuple<T1, T2, T3, T4, T5, T6, T7, T8>(
+  p1: T1,
+  p2: T2,
+  p3: T3,
+  p4: T4,
+  p5: T5,
+  p6: T6,
+  p7: T7,
+  p8: T8
+): [T1, T2, T3, T4, T5, T6, T7, T8];
+export function tuple<T1, T2, T3, T4, T5, T6, T7, T8, T9>(
+  p1: T1,
+  p2: T2,
+  p3: T3,
+  p4: T4,
+  p5: T5,
+  p6: T6,
+  p7: T7,
+  p8: T8,
+  p9: T9
+): [T1, T2, T3, T4, T5, T6, T7, T8, T9];
