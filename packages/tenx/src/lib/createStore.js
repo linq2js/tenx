@@ -1,4 +1,7 @@
+import delay from "../extras/delay";
+import shallowMemo from "../extras/shallowMemo";
 import createActionContext from "./createActionContext";
+import createArrayKeyedMap from "./createArrayKeyedMap";
 import createSelector from "./createSelector";
 import createState from "./createState";
 import defineProp from "./defineProp";
@@ -140,6 +143,55 @@ export default function createStore(
     return selector;
   }
 
+  resolveSelector.thunk = function (fn, lastResult) {
+    let cache;
+    let cancelled = false;
+    const onCancel = [];
+    const context = {
+      latest() {
+        lastResult && lastResult.cancel && lastResult.cancel();
+      },
+      delay(ms) {
+        const promise = delay(ms);
+        promise.cancel && onCancel.push(promise.cancel);
+        return promise;
+      },
+      debounce(ms) {
+        context.latest();
+        return context.delay(ms);
+      },
+      cancel() {
+        if (cancelled) return;
+        cancelled = true;
+        onCancel.forEach((x) => x());
+      },
+      cache(input) {
+        if (typeof arguments[0] === "function") {
+          if (!cache) {
+            cache = createArrayKeyedMap();
+            return cache.getOrAdd(Array.from(arguments).slice(1), input);
+          }
+          return;
+        }
+        if (isPromiseLike(lastResult)) {
+          handlePromiseStatuses(lastResult);
+          if (lastResult.loading || lastResult.error) return input;
+          return shallowMemo(lastResult.result, input);
+        }
+        return shallowMemo(lastResult, input);
+      },
+    };
+
+    const result = fn(context);
+    if (isPromiseLike(result)) {
+      if (result.cancel) onCancel.push(result.cancel);
+      result.cancel = context.cancel;
+      handlePromiseStatuses(result);
+    }
+
+    return result;
+  };
+
   Object.entries(stateModel).forEach(([name, initial]) => {
     const state = stateFactory(initial);
     defineProp(actionContext, name, () => state);
@@ -162,19 +214,12 @@ export default function createStore(
       const value = state.value;
       if (isPromiseLike(value)) {
         if (!lastHandledPromise || lastHandledPromise.original !== value) {
-          lastHandledPromise = value
-            .then(
-              (result) => (value.result = result),
-              (error) => (value.error = error)
-            )
-            .finally(() => (value.done = true));
+          lastHandledPromise = handlePromiseStatuses(value);
           lastHandledPromise.original = value;
         }
-        if (value.done) {
-          if (value.error) throw value.error;
-          return value.result;
-        }
-        throw lastHandledPromise;
+        if (value.loading) throw lastHandledPromise;
+        if (value.error) throw value.error;
+        return value.result;
       }
       return value;
     });
@@ -201,4 +246,22 @@ export default function createStore(
   }
 
   return options.component ? actionContext : store;
+}
+
+function handlePromiseStatuses(value) {
+  if (value.__statusHandlerRegistered) return value;
+  value.__statusHandlerRegistered = true;
+  value.loading = true;
+  return value.then(
+    (result) => {
+      value.loading = false;
+      value.result = result;
+      return result;
+    },
+    (error) => {
+      value.loading = false;
+      value.error = error;
+      throw error;
+    }
+  );
 }

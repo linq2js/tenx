@@ -1,6 +1,6 @@
 import {
   AccessibleStateValues,
-  ActionContext,
+  StoreContext,
   Dispatcher,
   Loadable,
   StateBag,
@@ -24,7 +24,7 @@ export function componentStore<TState>(
 
 export type UseComponentStore<TState> = (
   key?: any
-) => ActionContext<StateBag, TState> & { callback: CallbackFactory };
+) => StoreContext<StateBag, TState> & { callback: CallbackFactory };
 
 export interface UseStoreContext<TState> {
   dispatch: Dispatcher;

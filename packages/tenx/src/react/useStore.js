@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import createArrayKeyedMap from "../lib/createArrayKeyedMap";
+import globalContext from "../lib/globalContext";
 import isEqual from "../lib/isEqual";
 import isPromiseLike from "../lib/isPromiseLike";
 import callbackFactory from "./callbackFactory";
@@ -25,6 +26,7 @@ export default function useStore(store, selector) {
       data.error = undefined;
       data.cache.hookIndex = 0;
       try {
+        globalContext.render = true;
         data.checkStoreReady();
         return data.selector
           ? data.selector(data.store.__displayContext, data.selectContext)
@@ -38,6 +40,8 @@ export default function useStore(store, selector) {
           }
         }
         data.error = error;
+      } finally {
+        globalContext.render = false;
       }
     };
     data.handleChange = function () {

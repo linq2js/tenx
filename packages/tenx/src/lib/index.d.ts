@@ -8,7 +8,7 @@ export interface State<T> extends Loadable<T> {
   readonly loadable: Loadable<T>;
 }
 
-export interface ActionContextApi<TState> {
+export interface StoreContextApi<TState> {
   dispatch: Dispatcher;
   when: When<TState>;
   latest(): void;
@@ -26,7 +26,7 @@ export interface Loadable<T> {
   readonly promise: Promise<any>;
 }
 
-export type ActionContext<TStateBag = StateBag, TState = {}> = ActionContextApi<
+export type StoreContext<TStateBag = StateBag, TState = {}> = StoreContextApi<
   TState
 > &
   TStateBag;
@@ -36,7 +36,7 @@ export interface StateBag {
 }
 
 export interface StoreOptions<TState> {
-  init?(context: ActionContext): any;
+  init?(context: StoreContext): any;
 }
 
 export type Store<TState> = StoreBase<TState> & AccessibleStateValues<TState>;
@@ -175,3 +175,11 @@ export type ComputedStateValues<TState> = TState extends {
         : any;
     }
   : {};
+
+export interface ComputedContext {
+  latest(): void;
+  debounce(ms?: number): Promise<void>;
+  cancel(): void;
+  cache<T>(fn: () => T, key: any, ...otherKeys: any[]): T;
+  cache<T>(value: T): T;
+}

@@ -1,4 +1,4 @@
-import tenx, { ActionContext, State } from "./index";
+import tenx, { StoreContext, State } from "./index";
 import { ArrayState, entitySet, EntitySetState, EntityState } from "../extras";
 import { componentStore } from "../react";
 
@@ -28,7 +28,7 @@ function Add(
     todos,
     todos2,
     data,
-  }: ActionContext<{
+  }: StoreContext<{
     count: State<number>;
     todos: ArrayState<string>;
     todos2: EntitySetState<Todo, string>;
