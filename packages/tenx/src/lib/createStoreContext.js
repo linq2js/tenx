@@ -1,3 +1,4 @@
+import createArrayKeyedMap from "./createArrayKeyedMap";
 import createEmitter from "./createEmitter";
 import createState from "./createState";
 import globalContext from "./globalContext";
@@ -12,13 +13,14 @@ import Yield from "./Yield";
 
 const emptyState = {};
 
-export default function createActionContext({
+export default function createStoreContext({
   stateFactory = createState,
   getState = () => emptyState,
   getStore = noop,
   ...props
 } = {}) {
   const taskCache = new WeakMap();
+  let dispatcherCache;
   const emitter = createEmitter();
   const states = {};
   const context = {
@@ -264,6 +266,21 @@ export default function createActionContext({
       return result;
     });
   }
+
+  dispatch.get = function (action) {
+    if (!dispatcherCache) {
+      dispatcherCache = new WeakMap();
+    }
+
+    let dispatcher = dispatcherCache.get(action);
+    if (!dispatcher) {
+      dispatcherCache.set(
+        action,
+        (dispatcher = (payload) => dispatch(action, payload))
+      );
+    }
+    return dispatcher;
+  };
 
   return context;
 }

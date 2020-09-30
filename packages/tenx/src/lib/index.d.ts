@@ -60,10 +60,19 @@ export type Get = <T = any>(name: string) => State<T>;
 
 export interface Mutate {}
 
-export type Dispatcher = <TAction>(
-  action: TAction,
-  payload?: ActionPayload<TAction>
-) => ActionReturn<TAction>;
+export interface Dispatcher extends Function {
+  <TAction>(action: TAction, payload?: ActionPayload<TAction>): ActionReturn<
+    TAction
+  >;
+
+  /**
+   * get dispatcher for specified action
+   * @param action
+   */
+  get<TAction>(
+    action: TAction
+  ): (payload?: ActionPayload<TAction>) => ActionReturn<TAction>;
+}
 
 export type RemoveListener = () => void;
 

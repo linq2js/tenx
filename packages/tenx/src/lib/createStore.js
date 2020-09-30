@@ -1,6 +1,6 @@
 import delay from "../extras/delay";
 import shallowMemo from "../extras/shallowMemo";
-import createActionContext from "./createActionContext";
+import createStoreContext from "./createStoreContext";
 import createArrayKeyedMap from "./createArrayKeyedMap";
 import createSelector from "./createSelector";
 import createState from "./createState";
@@ -14,7 +14,7 @@ export default function createStore(
   options = {}
 ) {
   const props = {};
-  const actionContext = createActionContext({
+  const storeContext = createStoreContext({
     stateFactory,
     getState,
     getStore() {
@@ -22,7 +22,7 @@ export default function createStore(
     },
   });
   const staticStates = {};
-  const { when, dispatch, emitter, states, get, watch } = actionContext;
+  const { when, dispatch, emitter, states, get, watch } = storeContext;
   const selectors = {};
   const displayContext = {
     get(name) {
@@ -194,7 +194,7 @@ export default function createStore(
 
   Object.entries(stateModel).forEach(([name, initial]) => {
     const state = stateFactory(initial);
-    defineProp(actionContext, name, () => state);
+    defineProp(storeContext, name, () => state);
     defineProp(displayContext, name, () => state.displayValue);
     defineProp(store, name, () => state.value);
     states[name] = state;
@@ -209,7 +209,7 @@ export default function createStore(
       },
     };
     let lastHandledPromise;
-    defineProp(actionContext, name, () => state);
+    defineProp(storeContext, name, () => state);
     defineProp(displayContext, name, () => {
       const value = state.value;
       if (isPromiseLike(value)) {
@@ -245,7 +245,7 @@ export default function createStore(
     }
   }
 
-  return options.component ? actionContext : store;
+  return options.component ? storeContext : store;
 }
 
 function handlePromiseStatuses(value) {
