@@ -1,11 +1,12 @@
 import { setIn } from "./mutation";
 
+const defaultSelectId = (entity) => entity.id;
 export default function entitySetState(initial, options = {}) {
   if (typeof options === "function") {
     options = { selectId: options };
   }
 
-  const { selectId } = options;
+  const { selectId = defaultSelectId } = options;
 
   function normalize(value = []) {
     const ids = [];
@@ -21,16 +22,22 @@ export default function entitySetState(initial, options = {}) {
 
   function createStateValue(ids, entities) {
     let array;
-    return {
+    const result = {
       ids,
       entities,
-      toArray() {
+    };
+
+    Object.defineProperty(result, "toArray", {
+      value() {
         if (!array) {
           array = ids.map((id) => entities[id]);
         }
         return array;
       },
-    };
+      enumerable: false,
+    });
+
+    return result;
   }
 
   return function (state) {

@@ -1,4 +1,4 @@
-import { Cancellable, State } from "../lib";
+import { Cancellable, State, Store } from "../lib";
 
 export function array<T = any>(
   initial: T[],
@@ -16,8 +16,39 @@ export function entitySet<TEntity, TId = any>(
   options: { selectId?: (entity: TEntity) => TId }
 ): EntitySetState<TEntity, TId>;
 
+export function snapshot<TState, TKey extends keyof TState>(
+  store: Store<TState>,
+  prop: TKey,
+  options?: SnapshotOptions
+): SnapshotStore<TState[TKey]>;
+
+export function snapshot<TModel>(
+  store: Store<Required<TModel>>,
+  props: (keyof TModel)[],
+  options?: SnapshotOptions
+): SnapshotStore<TModel>;
+
+export interface SnapshotOptions {
+  maxLength?: number;
+}
+
 export interface ArrayOptions<T> {
   shallowCompare?: boolean;
+}
+
+export interface SnapshotStore<TEntity> {
+  all: TEntity[];
+  index: number;
+  current: TEntity | undefined;
+  prev: TEntity | undefined;
+  next: TEntity | undefined;
+  prevAll: TEntity[];
+  nextAll: TEntity[];
+  go(number: number): void;
+  back(): void;
+  forward(): void;
+  revert(index: number): void;
+  clear(): void;
 }
 
 export interface ArrayState<T> extends State<T[]> {

@@ -4,6 +4,7 @@ import {
   entitySet,
   EntitySetState,
   EntityState,
+  snapshot,
 } from "../extras";
 import { componentStore } from "../react";
 
@@ -28,6 +29,11 @@ const model = {
 };
 const counterStore = tenx(model);
 model.computed.doubleCount2.lastIndexOf("1");
+const counterSnapshot1 = snapshot(counterStore, "count");
+const counterSnapshot2 = snapshot<{ count: number; doubleCount: number }>(
+  counterStore,
+  ["count", "doubleCount"]
+);
 
 function Add(
   {
@@ -66,6 +72,9 @@ function* Saga() {
 }
 
 console.log(
+  counterSnapshot1.current.toExponential(),
+  counterSnapshot2.current.count.toExponential(),
+  counterSnapshot2.current.doubleCount.toExponential(),
   counterStore.get<number>("name").loadable.value,
   counterStore.watch("count", function (args) {
     return args.current + 1;
