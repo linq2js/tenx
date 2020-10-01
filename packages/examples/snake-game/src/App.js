@@ -84,7 +84,7 @@ function* GameSaga({ snake, food, when, delay, gameOver }) {
       const [x, y] = moves[direction](copyOfSnake[0]);
       // invalid move
       if (x < 0 || x >= columns || y < 0 || y >= rows) {
-        gameOver.value = `Game Over. Your score: ${snake.value.length}. Play again ?`;
+        gameOver.value = `Game Over. Your score: ${snake.value.length}. Press SPACE to play again ?`;
         break;
       }
       // append head
@@ -116,11 +116,6 @@ function App() {
         start: dispatch.get(Start),
         handleKeyUp: callback(
           (e) => {
-            // play again
-            if (state.gameOver) {
-              dispatch(Start);
-              return;
-            }
             switch (e.keyCode) {
               case 38:
                 move("up");
@@ -135,7 +130,7 @@ function App() {
                 move("down");
                 break;
               case 32:
-                dispatch(Pause);
+                dispatch(state.gameOver ? Start : Pause);
                 break;
             }
           },
