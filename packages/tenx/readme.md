@@ -39,3 +39,7 @@ const App = () => {
   );
 };
 ```
+
+## Examples:
+
+[Real world examples can be found here](https://github.com/linq2js/tenx/tree/master/packages/examples)
