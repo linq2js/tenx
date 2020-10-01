@@ -40,6 +40,24 @@ const App = () => {
 };
 ```
 
+## Features
+
+1. Simple API.
+1. No Provider needed.
+1. No Action Creators needed.
+1. Easy to writing Unit Tests.
+1. Computed/Derived States supported.
+1. Lazy state mutating / displaying.
+1. Lazy store initializing.
+1. React.Suspense supported.
+1. Data fetching / side effects
+1. Local store supported
+1. React Native supported
+1. Hot Reloading supported
+1. Reactotron supported
+1. Future action listening supported
+1. Cancellable action dispatching supported
+
 ## Examples:
 
 [Real world examples can be found here](https://github.com/linq2js/tenx/tree/master/packages/examples)
