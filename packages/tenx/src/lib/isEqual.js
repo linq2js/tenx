@@ -1,6 +1,6 @@
 import isPromiseLike from "./isPromiseLike";
 
-export default function isEqual(a) {
+export default function isEqual(a, b) {
   if (a === b) {
     return true;
   }

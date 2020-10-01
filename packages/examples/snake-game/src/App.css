@@ -1,38 +1,53 @@
 .App {
-  text-align: center;
+  padding: 10px;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.board {
+  background-color: black;
+  position: relative;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
+.snake {
+  background-color: yellow;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  animation: snake-anim infinite 500ms ease-in-out;
+  border-radius: 100px;
+}
+
+.snake.head {
+  width: 20px;
+  height: 20px;
+  margin-left: -4px;
+  margin-top: -4px;
+  border: 2px solid white;
+  background-color: orange;
+  z-index: 1;
+}
+
+.food {
+  background-color: red;
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  border-radius: 100px;
+  animation: food-anim infinite 300ms ease-in-out;
+}
+
+.message {
+  min-height: 30px;
+  font-weight: bold;
+}
+
+@keyframes snake-anim {
+  50% {
+    background-color: aqua;
   }
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
-}
-
-.App-link {
-  color: #61dafb;
-}
-
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
+@keyframes food-anim {
+  50% {
+    opacity: 0.5;
   }
 }

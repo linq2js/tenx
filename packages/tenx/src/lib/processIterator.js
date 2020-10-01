@@ -12,6 +12,16 @@ export default function processIterator(iterator, callback, context) {
   };
   const generatorContext = { next, last: context.last };
 
+  function handleCancel(array, cancel) {
+    array.push(cancel);
+    if (cancel.onDispose) {
+      cancel.onDispose(() => {
+        const index = array.indexOf(cancel);
+        index !== -1 && array.splice(index, 1);
+      });
+    }
+  }
+
   function next(payload) {
     if (props.cancelled) return;
 
@@ -45,7 +55,7 @@ export default function processIterator(iterator, callback, context) {
       if (value.type === "fork") {
         const result = value.target(...value.args);
         if (result && result.cancel) {
-          props.onCancel.push(result.cancel);
+          handleCancel(props.onCancel, result.cancel);
         }
         return callback();
       }
@@ -96,7 +106,7 @@ export default function processIterator(iterator, callback, context) {
       });
 
       if (result && result.cancel) {
-        cancels.push(result.cancel);
+        handleCancel(cancels, result.cancel);
       }
     });
   }
