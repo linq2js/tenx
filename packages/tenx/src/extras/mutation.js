@@ -1,4 +1,7 @@
 export function mutateProp(obj, prop, value) {
+  if (typeof value === "function") {
+    value = value(obj[prop]);
+  }
   if (obj[prop] === value) return obj;
   const copy = Array.isArray(obj) ? obj.slice() : { ...obj };
   copy[prop] = value;

@@ -24,6 +24,7 @@ export default function createStore(
   const staticStates = {};
   const { when, dispatch, emitter, states, get, watch } = storeContext;
   const selectors = {};
+  const cachedMethodInvokings = {};
   const displayContext = {
     get(name) {
       return get(name).loadable;
@@ -132,12 +133,31 @@ export default function createStore(
     emitter.emit("update", { store });
   }
 
+  function resolvePropValue(obj, prop) {
+    // is method invoking
+    if (prop.charAt(prop.length - 1) === ")") {
+      let cachedMethodInvoking = cachedMethodInvokings[prop];
+      if (!cachedMethodInvoking) {
+        const [method, rawArgs] = prop.split(/[()]/)[1];
+        cachedMethodInvoking = cachedMethodInvokings[prop] = {
+          method,
+          args: rawArgs.split(",").map((x) => x.trim()),
+        };
+      }
+      return obj[cachedMethodInvoking.method](...cachedMethodInvoking.args);
+    }
+    return obj[prop];
+  }
+
   function resolveSelector(name) {
     let selector = selectors[name];
     if (!selector) {
-      const props = name.split(".");
+      const props = name.match(/(\([^)]*\)|[^.])+/g);
       selectors[name] = selector = function (state, store) {
-        return props.reduce((prev, prop) => prev[prop], store);
+        return props.reduce(
+          (prev, prop) => resolvePropValue(prev, prop),
+          store
+        );
       };
     }
     return selector;

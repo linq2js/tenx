@@ -1,12 +1,33 @@
+import createArrayKeyedMap from "../lib/createArrayKeyedMap";
 import { setIn } from "./mutation";
 
 const defaultSelectId = (entity) => entity.id;
+const defaultMapper = (entity) => entity;
 export default function entitySetState(initial, options = {}) {
   if (typeof options === "function") {
     options = { selectId: options };
   }
 
   const { selectId = defaultSelectId } = options;
+
+  function toArray(ids, entities, mapper = defaultMapper) {
+    if (typeof mapper === "string") {
+      const prop = mapper;
+      mapper = (entity) => entity[prop];
+    }
+    return ids.map((id) => mapper(entities[id]));
+  }
+
+  function toMap(ids, entities, mapper) {
+    if (typeof mapper === "string") {
+      const prop = mapper;
+      mapper = (entity) => entity[prop];
+    }
+    return ids.reduce((obj, id) => {
+      obj[id] = mapper(entities[id]);
+      return obj;
+    }, {});
+  }
 
   function normalize(value = []) {
     const ids = [];
@@ -21,20 +42,29 @@ export default function entitySetState(initial, options = {}) {
   }
 
   function createStateValue(ids, entities) {
-    let array;
+    const cache = createArrayKeyedMap();
     const result = {
       ids,
       entities,
     };
 
-    Object.defineProperty(result, "toArray", {
-      value() {
-        if (!array) {
-          array = ids.map((id) => entities[id]);
-        }
-        return array;
+    Object.defineProperties(result, {
+      toArray: {
+        value(mapper) {
+          return cache.getOrAdd(["array", mapper], () =>
+            toArray(ids, entities, mapper)
+          );
+        },
+        enumerable: false,
       },
-      enumerable: false,
+      toMap: {
+        value(mapper) {
+          return cache.getOrAdd(["map", mapper], () =>
+            toMap(ids, entities, mapper)
+          );
+        },
+        enumerable: false,
+      },
     });
 
     return result;
@@ -78,21 +108,43 @@ export default function entitySetState(initial, options = {}) {
       update(...entities) {
         let newEntities = state.value.entities;
         let newIds = state.value.ids;
-        entities.forEach((entity) => {
-          const id = selectId(entity);
-          if (typeof id === "undefined") return;
-          // new entity
-          if (!(id in newEntities)) {
-            if (newIds === state.value.ids) {
-              newIds = newIds.slice();
+
+        if (typeof entities[0] === "function") {
+          const predicate = entities[0];
+          const filteredIds = newIds.filter((id) => {
+            const currentEntity = newEntities[id];
+            const newEntity = predicate(currentEntity);
+            if (newEntity === false) return false;
+            if (typeof newEntity === "object") {
+              if (newEntity !== currentEntity) {
+                if (newEntities === state.value.entities) {
+                  newEntities = { ...newEntities };
+                }
+                newEntities[id] = newEntity;
+              }
             }
-            newIds.push(id);
+            return true;
+          });
+          if (filteredIds.length !== newIds.length) {
+            newIds = filteredIds;
           }
-          if (newEntities === state.value.entities) {
-            newEntities = { ...newEntities };
-          }
-          newEntities[id] = entity;
-        });
+        } else {
+          entities.forEach((entity) => {
+            const id = selectId(entity);
+            if (typeof id === "undefined") return;
+            // new entity
+            if (!(id in newEntities)) {
+              if (newIds === state.value.ids) {
+                newIds = newIds.slice();
+              }
+              newIds.push(id);
+            }
+            if (newEntities === state.value.entities) {
+              newEntities = { ...newEntities };
+            }
+            newEntities[id] = entity;
+          });
+        }
         if (
           newIds !== state.value.ids ||
           newEntities !== state.value.entities
@@ -126,13 +178,40 @@ export default function entitySetState(initial, options = {}) {
           state.value = createStateValue(state.value.ids, newEntities);
         }
       },
+      map(mapper = defaultMapper) {
+        return state.value.ids.map((id) => mapper(state.value.entities[id]));
+      },
       remove(...ids) {
-        const newIds = state.value.ids.filter((id) => !ids.includes(id));
-        // nothing change
-        if (newIds.length === state.value.ids.length) return;
-        const newEntities = { ...state.value.entities };
-        ids.forEach((id) => delete newEntities[id]);
-        state.value = createStateValue(newIds, newEntities);
+        if (typeof ids[0] === "function") {
+          const predicate = ids[0];
+          let newEntities = state.value.entities;
+          const newIds = ids.filter((id) => {
+            const entity = state.value.entities[id];
+            if (predicate(entity)) {
+              if (newEntities === state.value.entities) {
+                newEntities = { ...newEntities };
+              }
+              delete newEntities[id];
+              return false;
+            }
+            return true;
+          });
+          if (newIds.length === state.value.ids.length) return;
+          state.value = createStateValue(newIds, newEntities);
+        } else {
+          const newIds = state.value.ids.filter((id) => !ids.includes(id));
+          // nothing change
+          if (newIds.length === state.value.ids.length) return;
+          const newEntities = { ...state.value.entities };
+          ids.forEach((id) => delete newEntities[id]);
+          state.value = createStateValue(newIds, newEntities);
+        }
+      },
+      toArray(mapper) {
+        return state.value.toArray(mapper);
+      },
+      toMap(mapper) {
+        return state.value.toMap(mapper);
       },
     });
   };

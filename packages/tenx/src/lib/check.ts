@@ -82,6 +82,7 @@ console.log(
   counterSnapshot3.current.count,
   counterSnapshot3.current.todos,
   counterSnapshot4.current.todos,
+  counterSnapshot4.current.todos2.toArray(),
   counterSnapshot4.current.count,
   counterStore.get<number>("name").loadable.value,
   counterStore.watch("count", function (args) {

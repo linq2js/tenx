@@ -106,11 +106,32 @@ export type PromiseResolved<T> = T extends Promise<infer TResolved>
   ? TResolved
   : never;
 
+export interface EntitySetStateApi<TEntity> {
+  toArray(): TEntity[];
+  toArray<TResult>(mapper: (entity: TEntity) => TResult): TResult[];
+  toArray<TProp extends keyof TEntity>(prop: TProp): TEntity[TProp][];
+  toMap<TResult>(
+    mapper: (entity: TEntity) => TResult
+  ): { [key: string]: TResult };
+  toMap<TProp extends keyof TEntity>(
+    prop: TProp
+  ): { [key: string]: TEntity[TProp] };
+}
+
+export interface EntitySetStateValue<TEntity, TId>
+  extends EntitySetStateApi<TEntity> {
+  entities: { [key: string]: TEntity };
+  ids: TId[];
+}
+
 export interface EntitySetState<TEntity, TId>
-  extends State<{ entities: { [key: string]: TEntity }; ids: TId[] }> {
+  extends State<EntitySetStateValue<TEntity, TId>>,
+    EntitySetStateApi<TEntity> {
   updateIn(...entities: { [key: string]: any }[]): void;
+  update(predicate: (entity: TEntity) => TEntity | boolean): void;
   update(...entities: TEntity[]): void;
   merge(...entities: Partial<TEntity>[]): void;
+  remove(predicate: (entity: TEntity) => boolean): void;
   remove(...ids: TId[]): void;
 }
 

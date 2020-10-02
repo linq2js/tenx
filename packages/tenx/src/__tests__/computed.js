@@ -97,30 +97,21 @@ test("cancel last result", async () => {
   expect(callback).toBeCalledTimes(2);
 });
 
-test("movie list", async () => {
+test("debounced computed state", async () => {
   const store = tenx({
-    keyword: "Avenger",
     page: 1,
     computed: {
-      // define computed prop presents movie search results
-      // this prop fetches data automatically when keyword changed
       results: [
-        "keyword",
         "page",
-        (keyword, page) => async ({ debounce, cache }) => {
-          if (!keyword) return { results: [] };
-          await debounce(100);
-          const res = await fetch(
-            `https://api.themoviedb.org/3/search/movie?&api_key=04c35731a5ee918f014970082a0088b1&query=${encodeURIComponent(
-              keyword
-            )}&page=${page}`
-          );
-          const data = await res.json();
-          return cache(data);
+        (page) => async ({ debounce, cache }) => {
+          await debounce(10);
+          return cache([page]);
         },
       ],
     },
   });
 
-  await expect(store.results).resolves.not.toBeUndefined();
+  await expect(store.results).resolves.toEqual([1]);
+  store.dispatch(({ page }) => page.value++);
+  await expect(store.results).resolves.toEqual([2]);
 });
