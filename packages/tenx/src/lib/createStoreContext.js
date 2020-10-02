@@ -1,4 +1,3 @@
-import createArrayKeyedMap from "./createArrayKeyedMap";
 import createEmitter from "./createEmitter";
 import createState from "./createState";
 import globalContext from "./globalContext";
@@ -8,8 +7,8 @@ import isPromiseLike from "./isPromiseLike";
 import processIterator from "./processIterator";
 import { noop } from "./types";
 import wrapUpdate from "./wrapUpdate";
-import delay from "../extras/delay";
 import Yield from "./Yield";
+import defaultDelay from "../extras/delay";
 
 const emptyState = {};
 
@@ -28,19 +27,27 @@ export default function createStoreContext({
     emitter,
     dispatch,
     latest,
-    delay() {
-      const promise = delay(...arguments);
-      if (globalContext.generator) {
-        return new Yield("wait", promise);
-      }
-      return promise;
-    },
+    delay,
     debounce,
     fork,
     when,
     watch,
     mutate,
     states,
+    state: {
+      get value() {
+        return getState();
+      },
+      set value(value) {
+        if (!value) return;
+        Object.entries(value).forEach(([name, value]) => {
+          const state = context[name];
+          if (state) {
+            state.value = value;
+          }
+        });
+      },
+    },
     get(name) {
       let state = states[name];
       if (!state) {
@@ -222,6 +229,24 @@ export default function createStoreContext({
   function debounce(ms = 0) {
     latest();
     return delay(ms);
+  }
+
+  function delay(ms, value) {
+    function createYield() {
+      return new Yield("wait", (callback) => {
+        const timerId = setTimeout(callback, ms, value);
+
+        function cancel() {
+          clearTimeout(timerId);
+        }
+
+        return cancel;
+      });
+    }
+    if (globalContext.generator) {
+      return createYield();
+    }
+    return defaultDelay(ms, value);
   }
 
   function dispatch(action, payload) {

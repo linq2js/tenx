@@ -16,7 +16,16 @@ export function entitySet<TEntity, TId = any>(
   options: { selectId?: (entity: TEntity) => TId }
 ): EntitySetState<TEntity, TId>;
 
-export function snapshot<TState, TKey extends keyof TState>(
+export function snapshot<TState>(
+  store: Store<TState>
+): SnapshotStore<Omit<TState, "computed">>;
+
+export function snapshot<TState>(
+  store: Store<TState>,
+  options: SnapshotOptions
+): SnapshotStore<Omit<TState, "computed">>;
+
+export function snapshot<TState, TKey extends keyof Omit<TState, "computed">>(
   store: Store<TState>,
   prop: TKey,
   options?: SnapshotOptions

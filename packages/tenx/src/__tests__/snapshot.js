@@ -74,3 +74,15 @@ test("back", () => {
     { ids: [1, 3], entities: { 1: { id: 1 }, 3: { id: 3 } } },
   ]);
 });
+
+test("backup whole state", () => {
+  snapshot = snapshotStore(store);
+  expect(snapshot.all).toEqual([{ todos: { ids: [], entities: {} } }]);
+  store.dispatch(Update, { id: 1 });
+  expect(snapshot.all).toEqual([
+    { todos: { ids: [], entities: {} } },
+    { todos: { ids: [1], entities: { 1: { id: 1 } } } },
+  ]);
+  snapshot.revert(0);
+  expect(store.todos).toEqual({ ids: [], entities: {} });
+});

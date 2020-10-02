@@ -17,6 +17,7 @@ export interface StoreContextApi<TState> {
   fork: Dispatcher;
   mutate: Mutate;
   get: Get;
+  state: { value: TState };
 }
 
 export interface Loadable<T> {

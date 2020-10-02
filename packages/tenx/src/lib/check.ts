@@ -34,6 +34,8 @@ const counterSnapshot2 = snapshot<{ count: number; doubleCount: number }>(
   counterStore,
   ["count", "doubleCount"]
 );
+const counterSnapshot3 = snapshot(counterStore);
+const counterSnapshot4 = snapshot(counterStore, {});
 
 function Add(
   {
@@ -41,6 +43,7 @@ function Add(
     todos,
     todos2,
     data,
+    state,
   }: StoreContext<{
     count: State<number>;
     todos: ArrayState<string>;
@@ -49,6 +52,7 @@ function Add(
   }>,
   _: number
 ) {
+  state.value = 100;
   count.value++;
   todos.push("aaa");
   data.unset("");
@@ -75,6 +79,10 @@ console.log(
   counterSnapshot1.current.toExponential(),
   counterSnapshot2.current.count.toExponential(),
   counterSnapshot2.current.doubleCount.toExponential(),
+  counterSnapshot3.current.count,
+  counterSnapshot3.current.todos,
+  counterSnapshot4.current.todos,
+  counterSnapshot4.current.count,
   counterStore.get<number>("name").loadable.value,
   counterStore.watch("count", function (args) {
     return args.current + 1;

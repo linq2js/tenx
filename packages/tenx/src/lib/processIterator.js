@@ -12,16 +12,6 @@ export default function processIterator(iterator, callback, context) {
   };
   const generatorContext = { next, last: context.last };
 
-  function handleCancel(array, cancel) {
-    array.push(cancel);
-    if (cancel.onDispose) {
-      cancel.onDispose(() => {
-        const index = array.indexOf(cancel);
-        index !== -1 && array.splice(index, 1);
-      });
-    }
-  }
-
   function next(payload) {
     if (props.cancelled) return;
 
@@ -55,7 +45,7 @@ export default function processIterator(iterator, callback, context) {
       if (value.type === "fork") {
         const result = value.target(...value.args);
         if (result && result.cancel) {
-          handleCancel(props.onCancel, result.cancel);
+          props.onCancel.push(result.cancel);
         }
         return callback();
       }
@@ -106,7 +96,7 @@ export default function processIterator(iterator, callback, context) {
       });
 
       if (result && result.cancel) {
-        handleCancel(cancels, result.cancel);
+        cancels.push(result.cancel);
       }
     });
   }
@@ -115,7 +105,7 @@ export default function processIterator(iterator, callback, context) {
     if (typeof target === "function") {
       const unsubscribe = target((args) => {
         unsubscribe && unsubscribe();
-        !props.cancelled && callback(args.action);
+        !props.cancelled && callback(args && args.action);
       });
       unsubscribe && props.onCancel.push(unsubscribe);
       return {

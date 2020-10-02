@@ -1,11 +1,19 @@
 import createStore from "../lib";
 import isEqual from "../lib/isEqual";
 
-export default function snapshotStore(
-  targetStore,
-  prop,
-  { maxLength, skipInitial } = {}
-) {
+export default function snapshotStore(targetStore, prop, options) {
+  if (!targetStore) throw new Error("Target store required");
+  // snapshotStore(store)
+  // snapshotStore(store, prop, options)
+  if (arguments.length < 2 || arguments.length > 2) {
+    [targetStore, prop, options] = arguments;
+  }
+  // snapshotStore(store, options)
+  else if (!Array.isArray(prop) && typeof prop === "object") {
+    [targetStore, prop, options] = [arguments[0], undefined, arguments[1]];
+  }
+
+  const { maxLength, skipInitial } = options || {};
   let backup, revert;
   if (Array.isArray(prop)) {
     const props = prop;
@@ -23,7 +31,7 @@ export default function snapshotStore(
         });
       });
     };
-  } else {
+  } else if (prop) {
     backup = (store) => {
       return store[prop];
     };
@@ -31,6 +39,11 @@ export default function snapshotStore(
       store.dispatch((context) => {
         context[prop].value = state;
       });
+    };
+  } else {
+    backup = (store) => store.state;
+    revert = (store, state) => {
+      store.dispatch((context) => (context.state.value = state));
     };
   }
 
