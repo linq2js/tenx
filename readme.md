@@ -265,13 +265,13 @@ An example of this would be to list the visibleTodoIds.
 It uses the todos and filter state to figure out what todos to actually display.
 We call it computed state.
 
-Accessing computed state from store object
+**Accessing computed state from store object**
 
 ```jsx
 const visibleTodoIds = store.visibleTodoIds;
 ```
 
-Accessing computed state from actions
+**Accessing computed state from actions**
 
 ```jsx
 function myAction(context) {
@@ -281,7 +281,7 @@ function myAction(context) {
 }
 ```
 
-Accessing computed state from component hook
+**Accessing computed state from component hook**
 
 ```jsx
 const visibleTodoIds = useStore(store, (state) => state.visibleTodoIds);
@@ -289,7 +289,7 @@ const visibleTodoIds = useStore(store, (state) => state.visibleTodoIds);
 
 ### Scaling up the application
 
-Defining all the state, actions one object would not work very well for a large application.
+Defining all the state, actions one object would not work very well for a large application (refer [this](https://codesandbox.io/s/tenx-todos-6f38j?file=/src/store/index.js)).
 A convention in tenx is to split these concepts into different files behind folders representing a domain of the application.
 
 **counter/store.js**
@@ -355,7 +355,7 @@ src/
 1. Lazy store initializing.
 1. React.Suspense supported.
 1. Data fetching / side effects
-1. Local store supported
+1. Component store supported
 1. React Native supported
 1. Hot Reloading supported
 1. Reactotron supported
