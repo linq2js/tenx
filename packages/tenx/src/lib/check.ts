@@ -6,7 +6,7 @@ import {
   EntityState,
   snapshot,
 } from "../extras";
-import { componentStore } from "../react";
+import { componentStore, useStore } from "../react";
 
 interface Todo {
   id: string;
@@ -46,6 +46,20 @@ const counterSnapshot2 = snapshot<{ count: number; doubleCount: number }>(
 const counterSnapshot3 = snapshot(counterStore);
 const counterSnapshot4 = snapshot(counterStore, {});
 
+function App() {
+  const { count, alert } = useStore(
+    counterStore,
+    (state, { callback, alert }) => {
+      return {
+        count: state.count,
+        alert,
+      };
+    }
+  );
+
+  console.log(count.toExponential(), alert.length);
+}
+
 function Add(
   {
     count,
@@ -53,11 +67,13 @@ function Add(
     todos2,
     data,
     state,
+    increase2,
   }: StoreContext<{
     count: State<number>;
     todos: ArrayState<string>;
     todos2: EntitySetState<Todo, string>;
     data: EntityState<{ [_: string]: any }>;
+    increase2(): void;
   }>,
   _: number
 ) {
@@ -76,7 +92,7 @@ function Add(
 
   const { count: count1, increase, callback } = useCompStore();
   const a = callback(() => increase(1));
-  console.log(count1.value, increase(111).toExponential(), a.caller);
+  console.log(count1.value, increase(111).toExponential(), a.caller, increase);
 
   return 1;
 }
@@ -92,7 +108,7 @@ console.log(
   counterSnapshot3.current.count,
   counterSnapshot3.current.todos,
   counterSnapshot4.current.todos,
-  counterSnapshot4.current.todos2.get.map((entity) => {
+  counterSnapshot4.current.todos2.map((entity) => {
     return { title: "" };
   }),
   counterSnapshot4.current.count,

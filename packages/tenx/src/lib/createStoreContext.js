@@ -303,6 +303,7 @@ export default function createStoreContext({
         action,
         (dispatcher = (payload) => dispatch(action, payload))
       );
+      dispatcher.__bouncedAction = true;
     }
     return dispatcher;
   };

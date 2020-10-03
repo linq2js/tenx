@@ -248,8 +248,9 @@ export default function createStore(
     states[name] = state;
   });
 
+  store.actions = {};
   Object.entries(actions).forEach(([key, action]) => {
-    store[key] = dispatch.get(action);
+    storeContext[key] = store[key] = store.actions[key] = dispatch.get(action);
   });
 
   if (init) {

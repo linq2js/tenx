@@ -1,10 +1,7 @@
 export default function tenx<
   TState = {},
   TActions extends StoreOptions<TState> = any
->(
-  state?: TState,
-  actions?: TActions
-): Store<TState> & StoreActions<TState, Omit<TActions, "init" | "component">>;
+>(state?: TState, actions?: TActions): Store<TState, TActions>;
 
 export interface State<T> extends Loadable<T> {
   value: T;
@@ -18,15 +15,15 @@ export type StoreActions<TState, TActions> = {
   ) => infer TResult
     ? (payload?: TPayload) => TResult
     : TActions[key] extends (
-        context?: StoreContext<StateBag, TState>
+        context?: StoreContext<StateBag, TState, TActions>
       ) => infer TResult
     ? () => TResult
     : (payload?: any) => void;
 };
 
-export interface StoreContextApi<TState> {
+export interface StoreContextApi<TState, TActions> {
   dispatch: Dispatcher;
-  when: When<TState>;
+  when: When<Store<TState, TActions>>;
   latest(): void;
   delay(ms?: number): Promise<void>;
   debounce(ms?: number): Promise<void>;
@@ -43,10 +40,11 @@ export interface Loadable<T> {
   readonly promise: Promise<any>;
 }
 
-export type StoreContext<TStateBag = StateBag, TState = {}> = StoreContextApi<
-  TState
-> &
-  TStateBag;
+export type StoreContext<
+  TStateBag = StateBag,
+  TState = {},
+  TActions = {}
+> = StoreContextApi<TState, TActions> & TStateBag & { [key: string]: Function };
 
 export interface StateBag {
   [key: string]: State<any>;
@@ -58,21 +56,25 @@ export type StoreOptions<TState> = {
   [key: string]: (context?: StoreContext<any, TState>, payload?: any) => any;
 };
 
-export type Store<TState> = StoreBase<TState> & AccessibleStateValues<TState>;
+export type Store<TState, TActions> = StoreBase<TState, TActions> &
+  AccessibleStateValues<TState> &
+  StoreActions<TState, Omit<TActions, "init" | "component">> & {
+    actions: StoreActions<TState, TActions>;
+  };
 
 export type AccessibleStateValues<TState> = StaticStateValues<
   Omit<TState, "computed">
 > &
   ComputedStateValues<TState>;
 
-export interface StoreBase<TState> {
+export interface StoreBase<TState, TActions> {
   readonly state: AccessibleStateValues<TState>;
   readonly loading: boolean;
   readonly error: boolean;
   dispatch: Dispatcher;
-  when: When<TState>;
+  when: When<Store<TState, TActions>>;
   get: Get;
-  watch: Watch<TState>;
+  watch: Watch<TState, TActions>;
 }
 
 export type Get = <T = any>(name: string) => State<T>;
@@ -95,35 +97,37 @@ export interface Dispatcher extends Function {
 
 export type RemoveListener = () => void;
 
-export interface When<TState> {
+export interface When<TStore> {
   (action: "*" | Function | Function[]): Promise<ActionInfo> & Cancellable;
-  (action: "change"): Promise<ChangeArgs<TState>> & Cancellable;
-  (action: "update"): Promise<UpdateArgs<TState>> & Cancellable;
-  (action: "dispatch"): Promise<DispatchArgs<TState>> & Cancellable;
+  (action: "change"): Promise<ChangeArgs<TStore>> & Cancellable;
+  (action: "update"): Promise<UpdateArgs<TStore>> & Cancellable;
+  (action: "dispatch"): Promise<DispatchArgs<TStore>> & Cancellable;
 
   (
     action: "*" | Function | Function[],
-    listener: Listener<DispatchArgs<TState>>
+    listener: Listener<DispatchArgs<TStore>>
   ): RemoveListener;
-  (action: "change", listener: Listener<ChangeArgs<TState>>): RemoveListener;
-  (action: "update", listener: Listener<UpdateArgs<TState>>): RemoveListener;
+  (action: "change", listener: Listener<ChangeArgs<TStore>>): RemoveListener;
+  (action: "update", listener: Listener<UpdateArgs<TStore>>): RemoveListener;
   (
     action: "dispatch",
-    listener: Listener<DispatchArgs<TState>>
+    listener: Listener<DispatchArgs<TStore>>
   ): RemoveListener;
 }
 
 export type KeyOf<T> = keyof T;
 
-export interface Watch<TState> {
+export interface Watch<TState, TActions> {
   <TKey extends KeyOf<AccessibleStateValues<TState>>>(
     prop: TKey,
-    callback: Listener<WatchArgs<TState, WatchValue<TState, TKey>>>
+    callback: Listener<
+      WatchArgs<Store<TState, TActions>, WatchValue<TState, TKey>>
+    >
   ): RemoveListener;
 
   <TValue = { [key in keyof TState]: TState[key] }, TKey = keyof TState>(
     props: TKey[],
-    callback: Listener<WatchArgs<TState, TValue>>
+    callback: Listener<WatchArgs<Store<TState, TActions>, TValue>>
   ): RemoveListener;
 }
 
@@ -139,23 +143,23 @@ export interface ActionInfo {
   readonly payload: any;
 }
 
-export interface ChangeArgs<TState> {
-  readonly store: Store<TState>;
+export interface ChangeArgs<TStore> {
+  readonly store: TStore;
 }
 
-export interface WatchArgs<TState, TValue> {
-  readonly store: Store<TState>;
+export interface WatchArgs<TStore, TValue> {
+  readonly store: TStore;
   readonly current: TValue;
   readonly previous: TValue;
 }
 
-export interface UpdateArgs<TState> {
-  readonly store: Store<TState>;
+export interface UpdateArgs<TStore> {
+  readonly store: TStore;
 }
 
-export interface DispatchArgs<TState> {
+export interface DispatchArgs<TStore> {
   readonly action: ActionInfo;
-  readonly store: Store<TState>;
+  readonly store: TStore;
 }
 
 export type ActionPayload<TAction> = TAction extends (
@@ -218,3 +222,15 @@ export type ComputedTuple<T> = T extends [
 ]
   ? CombinerReturnType<TCombiner>
   : any;
+
+export type StoreStateInfer<TStore> = TStore extends {
+  state: infer TState;
+}
+  ? TState
+  : never;
+
+export type StoreActionsInfer<TStore> = TStore extends {
+  actions: infer TActions;
+}
+  ? TActions
+  : never;

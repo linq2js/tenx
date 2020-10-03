@@ -13,6 +13,7 @@ export default function useStore(store, selector) {
     data.store = store;
     data.cache = createArrayKeyedMap();
     data.selectContext = {
+      ...store.actions,
       dispatch: data.store.dispatch,
       callback: callbackFactory(),
     };

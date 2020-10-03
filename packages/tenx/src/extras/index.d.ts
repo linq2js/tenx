@@ -1,4 +1,4 @@
-import { Cancellable, State, Store } from "../lib";
+import { Cancellable, State, Store, StoreStateInfer } from "../lib";
 
 export function array<T = any>(
   initial: T[],
@@ -16,23 +16,26 @@ export function entitySet<TEntity, TId = any>(
   options: { selectId?: (entity: TEntity) => TId }
 ): EntitySetState<TEntity, TId>;
 
-export function snapshot<TState>(
-  store: Store<TState>
-): SnapshotStore<Omit<TState, "computed">>;
+export function snapshot<TStore extends Store<any, any>>(
+  store: TStore
+): SnapshotStore<Omit<StoreStateInfer<TStore>, "computed">>;
 
-export function snapshot<TState>(
-  store: Store<TState>,
+export function snapshot<TStore extends Store<any, any>>(
+  store: TStore,
   options: SnapshotOptions
-): SnapshotStore<Omit<TState, "computed">>;
+): SnapshotStore<Omit<StoreStateInfer<TStore>, "computed">>;
 
-export function snapshot<TState, TKey extends keyof Omit<TState, "computed">>(
-  store: Store<TState>,
+export function snapshot<
+  TStore extends Store<any, any>,
+  TKey extends keyof Omit<StoreStateInfer<TStore>, "computed">
+>(
+  store: TStore,
   prop: TKey,
   options?: SnapshotOptions
-): SnapshotStore<TState[TKey]>;
+): SnapshotStore<StoreStateInfer<TStore>[TKey]>;
 
 export function snapshot<TModel>(
-  store: Store<Required<TModel>>,
+  store: Store<Required<TModel>, {}>,
   props: (keyof TModel)[],
   options?: SnapshotOptions
 ): SnapshotStore<TModel>;
