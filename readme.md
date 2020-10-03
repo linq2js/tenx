@@ -5,7 +5,7 @@ A Flux implementation for javascript/React app
 ## Installation
 
 ```
-npm i Tenx --save
+npm i tenx --save
 ```
 
 ## Introduction
