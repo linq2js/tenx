@@ -14,7 +14,14 @@ interface Todo {
   completed: boolean;
 }
 
-const useCompStore = componentStore({ count: 0 });
+const useCompStore = componentStore(
+  { count: 0 },
+  {
+    increase({ count }: StoreContext, by: number) {
+      return 100;
+    },
+  }
+);
 const model = {
   count: 0,
   todos: undefined as ArrayState<string>,
@@ -27,7 +34,9 @@ const model = {
     doubleCount2: ["count", "count2", () => 100],
   },
 };
-const counterStore = tenx(model);
+const counterStore = tenx(model, {
+  alert(context) {},
+});
 model.computed.doubleCount2.lastIndexOf("1");
 const counterSnapshot1 = snapshot(counterStore, "count");
 const counterSnapshot2 = snapshot<{ count: number; doubleCount: number }>(
@@ -65,8 +74,9 @@ function Add(
     title: "aaa",
   });
 
-  const { count: count1 } = useCompStore();
-  console.log(count1.value);
+  const { count: count1, increase, callback } = useCompStore();
+  const a = callback(() => increase(1));
+  console.log(count1.value, increase(111).toExponential(), a.caller);
 
   return 1;
 }
@@ -82,8 +92,11 @@ console.log(
   counterSnapshot3.current.count,
   counterSnapshot3.current.todos,
   counterSnapshot4.current.todos,
-  counterSnapshot4.current.todos2.toArray(),
+  counterSnapshot4.current.todos2.get.map((entity) => {
+    return { title: "" };
+  }),
   counterSnapshot4.current.count,
+  counterStore.alert(),
   counterStore.get<number>("name").loadable.value,
   counterStore.watch("count", function (args) {
     return args.current + 1;

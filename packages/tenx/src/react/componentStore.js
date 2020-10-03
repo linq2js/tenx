@@ -3,11 +3,11 @@ import createArrayKeyedMap from "../lib/createArrayKeyedMap";
 import createStore from "../lib/createStore";
 import callbackFactory from "./callbackFactory";
 
-export default function componentStore(model, options) {
+export default function componentStore(model, actions) {
   const instances = createArrayKeyedMap();
   function storeFactory() {
     return createStore(model, {
-      ...options,
+      ...actions,
       component: true,
     });
   }
@@ -22,6 +22,7 @@ export default function componentStore(model, options) {
       data.callback = callbackFactory();
     }
     data.isRendering = true;
+    data.callback.resetHookIndex();
 
     useEffect(() => {
       data.isRendering = false;

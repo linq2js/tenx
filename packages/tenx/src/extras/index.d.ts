@@ -82,6 +82,7 @@ export interface ArrayState<T> extends State<T[]> {
 
 export interface EntityState<T> extends State<T> {
   (state: State<any>): this;
+  set(values: Partial<T>): T;
   set(key: (keyof T)[], value: any): T;
   set(key: keyof T, value: any): T;
   set(predicate: (key: string, value: any) => boolean, value: any): T;
@@ -107,15 +108,18 @@ export type PromiseResolved<T> = T extends Promise<infer TResolved>
   : never;
 
 export interface EntitySetStateApi<TEntity> {
-  toArray(): TEntity[];
-  toArray<TResult>(mapper: (entity: TEntity) => TResult): TResult[];
-  toArray<TProp extends keyof TEntity>(prop: TProp): TEntity[TProp][];
-  toMap<TResult>(
-    mapper: (entity: TEntity) => TResult
+  array<TResult>(
+    mapper: (entity?: TEntity) => TResult,
+    filter?: (entity?: TEntity) => boolean
+  ): TResult[];
+  map<TResult>(
+    mapper: (entity?: TEntity) => TResult,
+    filter?: (entity?: TEntity) => boolean
   ): { [key: string]: TResult };
-  toMap<TProp extends keyof TEntity>(
-    prop: TProp
-  ): { [key: string]: TEntity[TProp] };
+  reduce<TSeed, TResult>(
+    reducer: (seed?: TSeed, entity?: TEntity) => TResult,
+    seed?: TSeed
+  ): TResult;
 }
 
 export interface EntitySetStateValue<TEntity, TId>

@@ -24,7 +24,7 @@ export default function useStore(store, selector) {
     };
     data.select = function () {
       data.error = undefined;
-      data.cache.hookIndex = 0;
+      data.selectContext.callback.resetHookIndex();
       try {
         globalContext.render = true;
         data.checkStoreReady();

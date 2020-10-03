@@ -5,6 +5,7 @@ import {
   Loadable,
   StateBag,
   Store,
+  StoreActions,
 } from "../lib";
 
 export function useStore<TState>(
@@ -18,13 +19,16 @@ export function useStore<TState, TResult = any>(
   ) => TResult
 ): TResult;
 
-export function componentStore<TState>(
-  state: TState
-): UseComponentStore<TState>;
+export function componentStore<TState, TActions>(
+  state: TState,
+  actions?: TActions
+): UseComponentStore<TState, TActions>;
 
-export type UseComponentStore<TState> = (
+export type UseComponentStore<TState, TActions> = (
   key?: any
-) => StoreContext<StateBag, TState> & { callback: CallbackFactory };
+) => StoreContext<StateBag, TState> & {
+  callback: CallbackFactory;
+} & StoreActions<TState, TActions>;
 
 export interface UseStoreContext<TState> {
   dispatch: Dispatcher;
@@ -35,7 +39,7 @@ export type DisplayableStateValues<TState> = AccessibleStateValues<TState> & {
   get<T = any>(name: string): Loadable<T>;
 };
 
-export type CallbackFactory = <TResult>(
-  fn: () => TResult,
+export type CallbackFactory = <TFunc extends Function>(
+  fn: TFunc,
   ...keys: any[]
-) => TResult;
+) => TFunc;

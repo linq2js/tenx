@@ -48,6 +48,10 @@ export default function createSelector(selector, resolver) {
   }
 
   if (Array.isArray(selector)) {
+    if (selector.length === 1 && Array.isArray(selector[0])) {
+      const literal = selector[0][0];
+      return () => literal;
+    }
     const combiner = selector[selector.length - 1];
     const selectors = selector
       .slice(0, selector.length - 1)
@@ -80,6 +84,6 @@ export default function createSelector(selector, resolver) {
 
   throw new Error(
     "Invalid selector type. Expected Array | String | Function but got " +
-    typeof selector
+      typeof selector
   );
 }

@@ -1,4 +1,4 @@
-import { mutateProp, setIn } from "./mutation";
+import { setIn } from "./mutation";
 
 export default function entityState(initial = {}) {
   return function (state) {
@@ -6,11 +6,14 @@ export default function entityState(initial = {}) {
 
     return Object.assign(state, {
       set(key, value) {
-        const keys = Array.isArray(key) ? key : key.split(".");
-        if (keys.length === 1) {
-          return (state.value = mutateProp(state.value, keys[0], value));
+        if (arguments.length < 2 && typeof key === "object") {
+          let next = state.value;
+          Object.entries(key).forEach(([key, value]) => {
+            next = setIn(next, key.split("."), value);
+          });
+          return (state.value = next);
         }
-
+        const keys = Array.isArray(key) ? key : key.split(".");
         return (state.value = setIn(state.value, keys, value));
       },
       unset() {

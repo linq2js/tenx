@@ -1,12 +1,28 @@
-export default function tenx<TState = {}>(
+export default function tenx<
+  TState = {},
+  TActions extends StoreOptions<TState> = any
+>(
   state?: TState,
-  options?: StoreOptions<TState>
-): Store<TState>;
+  actions?: TActions
+): Store<TState> & StoreActions<TState, Omit<TActions, "init" | "component">>;
 
 export interface State<T> extends Loadable<T> {
   value: T;
   readonly loadable: Loadable<T>;
 }
+
+export type StoreActions<TState, TActions> = {
+  [key in keyof TActions]: TActions[key] extends (
+    context: StoreContext<StateBag, TState>,
+    payload: infer TPayload
+  ) => infer TResult
+    ? (payload?: TPayload) => TResult
+    : TActions[key] extends (
+        context?: StoreContext<StateBag, TState>
+      ) => infer TResult
+    ? () => TResult
+    : (payload?: any) => void;
+};
 
 export interface StoreContextApi<TState> {
   dispatch: Dispatcher;
@@ -36,9 +52,11 @@ export interface StateBag {
   [key: string]: State<any>;
 }
 
-export interface StoreOptions<TState> {
-  init?(context: StoreContext): any;
-}
+export type StoreOptions<TState> = {
+  init?(context: StoreContext<{}, TState>): any;
+} & {
+  [key: string]: (context?: StoreContext<any, TState>, payload?: any) => any;
+};
 
 export type Store<TState> = StoreBase<TState> & AccessibleStateValues<TState>;
 

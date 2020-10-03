@@ -2,7 +2,7 @@ import { render, fireEvent } from "@testing-library/react";
 import React from "react";
 import { componentStore } from "../react";
 
-const useCounterStore = componentStore({ count: 0 });
+const useCounterStore = componentStore({ count: 0 } );
 
 test("counter", () => {
   const App = () => {

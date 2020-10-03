@@ -58,20 +58,20 @@ test("updateIn", () => {
   });
 });
 
-test("toArray", () => {
-  expect(store.todos.toArray()).toEqual([
+test("array()", () => {
+  expect(store.todos.array()).toEqual([
     { id: 1, title: "item 1", completed: false },
     { id: 2, title: "item 2", completed: false },
     { id: 3, title: "item 3", completed: true },
   ]);
 });
 
-test("toArray(completed)", () => {
-  expect(store.todos.toArray("completed")).toEqual([false, false, true]);
+test("array(completed)", () => {
+  expect(store.todos.array("completed")).toEqual([false, false, true]);
 });
 
-test("toMap(completed)", () => {
-  expect(store.todos.toMap("completed")).toEqual({
+test("map(completed)", () => {
+  expect(store.todos.map("completed")).toEqual({
     1: false,
     2: false,
     3: true,

@@ -11,7 +11,7 @@ import isPromiseLike from "./isPromiseLike";
 
 export default function createStore(
   { computed: computedModel = {}, ...stateModel } = {},
-  options = {}
+  { init, component, ...actions } = {}
 ) {
   const props = {};
   const storeContext = createStoreContext({
@@ -138,7 +138,7 @@ export default function createStore(
     if (prop.charAt(prop.length - 1) === ")") {
       let cachedMethodInvoking = cachedMethodInvokings[prop];
       if (!cachedMethodInvoking) {
-        const [method, rawArgs] = prop.split(/[()]/)[1];
+        const [method, rawArgs] = prop.split(/[()]/);
         cachedMethodInvoking = cachedMethodInvokings[prop] = {
           method,
           args: rawArgs.split(",").map((x) => x.trim()),
@@ -216,7 +216,8 @@ export default function createStore(
     const state = stateFactory(initial);
     defineProp(storeContext, name, () => state);
     defineProp(displayContext, name, () => state.displayValue);
-    defineProp(store, name, () => state.value);
+    const getter = () => state.value;
+    defineProp(store, name, getter);
     states[name] = state;
     staticStates[name] = state;
   });
@@ -247,8 +248,12 @@ export default function createStore(
     states[name] = state;
   });
 
-  if (options.init) {
-    const result = dispatch(options.init);
+  Object.entries(actions).forEach(([key, action]) => {
+    store[key] = dispatch.get(action);
+  });
+
+  if (init) {
+    const result = dispatch(init);
     if (isPromiseLike(result) && result.async !== false) {
       props.loading = true;
       result.then(
@@ -265,7 +270,7 @@ export default function createStore(
     }
   }
 
-  return options.component ? storeContext : store;
+  return component ? storeContext : store;
 }
 
 function handlePromiseStatuses(value) {
