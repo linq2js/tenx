@@ -1,4 +1,4 @@
-# Tenx
+# tenx
 
 A Flux implementation for javascript/React app
 
@@ -10,19 +10,19 @@ npm i tenx --save
 
 ## Introduction
 
-In this introduction you will get an overview of Tenx and how you can think about application development.
-We will be using REACT to write the UI, but you can use Tenx with VUE and ANGULAR if either of those is your preference.
+In this introduction you will get an overview of tenx and how you can think about application development.
+We will be using REACT to write the UI, but you can use tenx with VUE and ANGULAR if either of those is your preference.
 
 Before we move on, have a quick look at this sandbox.
-It is a simple counter application, and it gives you some foundation before talking more about Tenx and building applications.
+It is a simple counter application, and it gives you some foundation before talking more about tenx and building applications.
 
 ```jsx
 import React from "react";
 import ReactDOM from "react-dom";
-import Tenx from "Tenx";
-import { useStore } from "Tenx/react";
+import tenx from "tenx";
+import { useStore } from "tenx/react";
 
-const store = Tenx(
+const store = tenx(
   // state
   {
     count: 0,
@@ -66,7 +66,7 @@ ReactDOM.render(<App />, rootElement);
 First of all we have to talk about application and component state. In the counter example above we chose to define our count state as application state, outside of the component.
 We could have defined the count inside the component instead, and the application would work exactly the same. So why did we choose application state?
 
-If the count example above was the entire application it would not make any sense to introduce application state and Tenx.
+If the count example above was the entire application it would not make any sense to introduce application state and tenx.
 But if you were to increase the scope of this simple application you would be surprised how quickly you get into the following scenarios:
 
 You want to introduce other component needs to know about the current state of the count. This new component cannot be a parent of the component owning the count state.
@@ -90,7 +90,7 @@ And this is the most important point. By using application state instead of comp
 As you can see in the count example we added a state object when we created the instance.
 
 ```jsx
-const store = Tenx({
+const store = tenx({
   count: 0,
 });
 ```
@@ -98,11 +98,11 @@ const store = Tenx({
 This store object will hold all the application state, we call it a single state tree. That does not mean you define all the state in one file and we will talk more about that later.
 For now let us talk about what you put into this state tree.
 
-A single state tree typically favours serializable state. That means state that can be JSON.parse and JSON.stringify back and forth. It can be safely passed between the client and the server, localStorage or to web workers. You will use strings, numbers, booleans, arrays, objects and null. Tenx also has the ability to allow you define state values as class instances, even serializing back and forth..
+A single state tree typically favours serializable state. That means state that can be JSON.parse and JSON.stringify back and forth. It can be safely passed between the client and the server, localStorage or to web workers. You will use strings, numbers, booleans, arrays, objects and null. tenx also has the ability to allow you define state values as class instances, even serializing back and forth..
 
 ### Defining actions
 
-When you need to change your state you define actions. Tenx only allows changing the state of the application inside the actions. The actions are plain functions. The only thing that makes them special is that they all receive a preset first argument, called the context:
+When you need to change your state you define actions. tenx only allows changing the state of the application inside the actions. The actions are plain functions. The only thing that makes them special is that they all receive a preset first argument, called the context:
 
 ```jsx
 function increaseCount(context) {
@@ -128,10 +128,10 @@ function doubleCount({ dispatch }) {
 }
 ```
 
-Tenx supports async action as well
+tenx supports async action as well
 
 ```jsx
-import { delay } from "Tenx/extras";
+import { delay } from "tenx/extras";
 
 function increaseCount({ count }) {
   count.value++;
@@ -147,16 +147,16 @@ async function increaseCountAsync({ dispatch }) {
 
 Now we will move to a more complex example. Please have a look:
 
-[Todo App](https://codesandbox.io/s/Tenx-todos-6f38j)
+[Todo App](https://codesandbox.io/s/tenx-todos-6f38j)
 
-We have now separated out the Tenx related logic into its own file, store/index.js.
+We have now separated out the tenx related logic into its own file, store/index.js.
 
 #### References
 
 What to take notice of is how we store the todos of this application.
 
 ```jsx
-Tenx({
+tenx({
   // ...
   todos: {},
   // ...
@@ -182,7 +182,7 @@ const todos = {
 };
 ```
 
-Tenx provides entitySet data structure, that can normalize list of entity efficient.
+tenx provides entitySet data structure, that can normalize list of entity efficient.
 
 ```jsx
 const todos = entitySet([
@@ -290,7 +290,7 @@ const visibleTodoIds = useStore(store, (state) => state.visibleTodoIds);
 ### Scaling up the application
 
 Defining all the state, actions one object would not work very well for a large application.
-A convention in Tenx is to split these concepts into different files behind folders representing a domain of the application.
+A convention in tenx is to split these concepts into different files behind folders representing a domain of the application.
 
 **counter/store.js**
 
@@ -364,5 +364,5 @@ src/
 
 ## Examples
 
-[Real world examples can be found here](https://github.com/linq2js/Tenx/tree/master/packages/examples)
-[Todo App](https://codesandbox.io/s/Tenx-todos-6f38j?file=/src/store/index.js)
+[Real world examples can be found here](https://github.com/linq2js/tenx/tree/master/packages/examples)
+[Todo App](https://codesandbox.io/s/tenx-todos-6f38j?file=/src/store/index.js)
