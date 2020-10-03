@@ -134,6 +134,11 @@ export interface EntitySetStateValue<TEntity, TId>
 export interface EntitySetState<TEntity, TId>
   extends State<EntitySetStateValue<TEntity, TId>>,
     EntitySetStateApi<TEntity> {
+  get(id: TId, defaultValue?: TEntity): TEntity;
+  entity(id: TId): EntityState<TEntity>;
+  sort(ids: TId[]): void;
+  sort(compareFn?: (a: TId, b: TId) => number): void;
+  swap(a: TId, b: TId): void;
   updateIn(...entities: { [key: string]: any }[]): void;
   update(predicate: (entity: TEntity) => TEntity | boolean): void;
   update(...entities: TEntity[]): void;

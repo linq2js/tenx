@@ -3,6 +3,7 @@ import createArrayKeyedMap from "../lib/createArrayKeyedMap";
 import globalContext from "../lib/globalContext";
 import isEqual from "../lib/isEqual";
 import isPromiseLike from "../lib/isPromiseLike";
+import { noop } from "../lib/types";
 import callbackFactory from "./callbackFactory";
 
 export default function useStore(store, selector) {
@@ -55,6 +56,11 @@ export default function useStore(store, selector) {
   useEffect(() => {
     data.store.when("update", data.handleChange);
   }, [data, store]);
+  useEffect(() => {
+    return () => {
+      data.rerender = noop;
+    };
+  }, [data]);
   // an error captured from handleChange()
   if (data.error) throw data.error;
   data.prev = data.select();

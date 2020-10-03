@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import createArrayKeyedMap from "../lib/createArrayKeyedMap";
 import createStore from "../lib/createStore";
+import { noop } from "../lib/types";
 import callbackFactory from "./callbackFactory";
 
 export default function componentStore(model, actions) {
@@ -40,6 +41,12 @@ export default function componentStore(model, actions) {
         }
         data.rerender({});
       });
+    }, [data]);
+
+    useEffect(() => {
+      return () => {
+        data.rerender = noop;
+      };
     }, [data]);
 
     data.store.callback = data.callback;

@@ -1,5 +1,6 @@
-import createArrayKeyedMap from "../lib/createArrayKeyedMap";
+import createState from "../lib/createState";
 import { setIn } from "./mutation";
+import shallowMemo from "./shallowMemo";
 
 const defaultSelectId = (entity) => entity.id;
 const defaultMapper = (entity) => entity;
@@ -14,6 +15,39 @@ export default function entitySetState(initial, options = {}) {
     state.value = normalize(initial, selectId);
 
     return Object.assign(state, {
+      get(id, defaultValue) {
+        return state.value.entities[id] || defaultValue;
+      },
+      entity(id) {
+        const entity = createState(state.value.entities[id], () => {
+          state.update(entity.value);
+        });
+        return entity;
+      },
+      swap(a, b) {
+        if (a === b) return;
+        const newIds = state.value.ids.slice();
+        const ai = newIds.indexOf(a);
+        const bi = newIds.indexOf(b);
+        if (ai === -1 || bi === -1) throw new Error("Invalid entity id");
+        newIds[ai] = b;
+        newIds[bi] = a;
+        state.value = createStateValue(newIds, state.value.entities);
+      },
+      sort(compareFn) {
+        let newIds;
+        if (Array.isArray(compareFn)) {
+          newIds = compareFn;
+        } else {
+          newIds = shallowMemo(
+            state.value.ids,
+            state.value.slice().sort(compareFn)
+          );
+        }
+        if (newIds !== state.value.ids) {
+          state.value = createStateValue(newIds, state.value.entities);
+        }
+      },
       updateIn(...entities) {
         let newEntities = state.value.entities;
         let newIds = state.value.ids;

@@ -1,6 +1,11 @@
 import isEqual from "./isEqual";
+import { noop } from "./types";
 
-export default function createState(initial, onValueChange, onStatusChange) {
+export default function createState(
+  initial,
+  onValueChange = noop,
+  onStatusChange = onValueChange
+) {
   const props = {
     value: initial,
     changeToken: undefined,
