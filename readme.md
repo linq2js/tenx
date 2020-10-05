@@ -22,15 +22,15 @@ Basically 2 core concepts in tenx:
 
 #### What is the store ?
 
-The store is an object which holds all the application data.
-This holds the state of our application and this can be used everywhere in our project.
+The store is an object which holds all the app data.
+This holds the state of our app and this can be used everywhere in our project.
 
 Unlikely redux, you can define many stores in your app, but we use only single store for todolist app
 
 #### Actions
 
-Actions are pure functions. You can only mutate application state inside the actions.
-So action is where you put all application logics.
+Actions are pure functions. You can only mutate app state inside the actions.
+So action is where you put all app logics.
 
 An action takes **two** parameters. The first parameter is store context.
 It contains many named state mutators and provides some util functions for advanced usages.
@@ -38,9 +38,9 @@ The second parameter is an action payload.
 
 ## Creating a simple todo app
 
-### Defining application state tree
+### Defining app state tree
 
-Firstly, we need to define application state tree. Todos state is array of todo item, that's looks like:
+Firstly, we need to define an app state tree. Todos state is array of todo item, that's looks like:
 
 ```jsx
 const state = {
@@ -207,7 +207,7 @@ return (
 );
 ```
 
-You can find full source [here](https://github.com/linq2js/tenx/tree/master/packages/examples/todo-app-1)
+You can find full source [here](https://github.com/linq2js/tenx/tree/master/packages/examples/todo-app-basic)
 
 ## Introducing computed state
 
@@ -237,9 +237,9 @@ function TodoFilter() {
 ```
 
 The TodoFilter component above needs 3 states: allTodoCount, activeTodoCount and completedTodoCount.
-Those states will be re-computed whenever the component render, evenly no application state updated.
+Those states will be re-computed whenever the component render, evenly no app state updated.
 By using derived / computed state, you can define some dynamic state computation easily,
-and computed states only re-compute when your application state changed. Let update store creating code.
+and computed states only re-compute when your app state changed. Let update store creating code.
 
 ```jsx
 const store = tenx(
@@ -289,25 +289,135 @@ function TodoFilter() {
 }
 ```
 
+Let's go into deep dives on computed states. Computed state can be:
+
+#### computedFunction(state)
+
+A function that returns computed value
+
+```jsx
+tenx({
+  computed: {
+    activeTodoCount(state) {
+      return state.todos.filter((todo) => !todo.completed);
+    },
+  },
+});
+```
+
+#### Tuple \[...dependencyList, combiner]
+
+Each dependency item can be:
+
+**string** (name of static state or other computed states)
+
+**function** (a function returns slice of state)
+
+Combiner is a function that retrieves all values of dependency list and returns combined value.
+
+```jsx
+tenx({
+  todos: [],
+  filter: "all",
+  computed: {
+    visibleTodos: [
+      "todos",
+      "fitler",
+      function (todos, filter) {
+        if (filter === "active") return todos.filter((todo) => !todo.completed);
+        if (filter === "completed")
+          return todos.filter((todo) => todo.completed);
+        return todos;
+      },
+    ],
+  },
+});
+```
+
 ## How to persist app state
 
-## Introducing store snapshot
+Sometimes you want to store your app state to persistence storage (sessionStorage, localStorage, AsyncStorage etc.).
+We define init action to add some logics for handling app state changing.
 
-## Using Suspense to handle async state
+```jsx
+const store = tenx(initial, {
+  init(context) {
+    const persistedTodos = JSON.parse(localStorage.getItem("appState"));
+    if (persistedTodos) {
+      context.todos.value = persistedTodos;
+    }
 
-## Introducing Saga
+    // by using watch api, we can listen when specified state prop changed
+    context.watch("todos", function (e) {
+      // current value of watched state
+      console.log(e.current);
+      // previous value of watched state
+      console.log(e.previous);
+      // save todos to local storage
+      localStorage.setItem("appState", JSON.stringify(e.current));
+    });
+  },
+});
+```
 
-## React develop tools
+An init action will be dispatched when store runs initializing phase.
+If you define init action is async function, your components cannot consume store state until init action finished.
 
-### Reactotron
+```jsx
+const store = tenx(initial, {
+  async init(context) {
+    // todoServer performs loading todos from server
+    const persistedTodos = await todoService.load();
+    if (persistedTodos) {
+      context.todos.value = persistedTodos;
+    }
 
-## Writing unit tests
+    // by using watch api, we can listen when specified state prop changed
+    context.watch("todos", function (e) {
+      // current value of watched state
+      console.log(e.current);
+      // previous value of watched state
+      console.log(e.previous);
+      // save todos to local storage
+      todoService.save(e.current);
+    });
+  },
+});
+```
 
-## Features
+In component render function, an error will be thrown if you try to consume in progress store.
+To handle store initializing progress, you must wrap your App component inside React.Suspense element.
 
-## API Reference
+```jsx
+import React, { Suspense } from "react";
+import { render } from "react-dom";
+import App from "./compoments/App";
+
+render(
+  <Suspense fallback="Application loading...">
+    <App />
+  </Suspense>
+);
+```
+
+You can find fully example about lazy state persistence [here](https://github.com/linq2js/tenx/tree/master/packages/examples/state-persistence)
+
+## Introducing store snapshot (TBD)
+
+## Introducing Saga (TBD)
+
+## React develop tools (TBD)
+
+### Reactotron (TBD)
+
+## Writing unit tests (TBD)
+
+## Features (TBD)
+
+## API Reference (TBD)
 
 ## Examples
 
-[Real world examples can be found here](https://github.com/linq2js/tenx/tree/master/packages/examples)
+[Snake Game](https://github.com/linq2js/tenx/tree/master/packages/examples/snake-game)
+[Movie Search](https://github.com/linq2js/tenx/tree/master/packages/examples/move-search)
 [Todo App](https://codesandbox.io/s/tenx-todos-6f38j?file=/src/store/index.js)
