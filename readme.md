@@ -17,8 +17,8 @@ We will do this by implementing a todolist app using react and tenx.
 
 Basically 2 core concepts in tenx:
 
-1. Store
-1. Actions
+- Store
+- Actions
 
 #### What is the store ?
 
@@ -412,6 +412,6 @@ You can find fully example about lazy state persistence [here](https://github.co
 
 ## Examples
 
-[Snake Game](https://github.com/linq2js/tenx/tree/master/packages/examples/snake-game)
-[Movie Search](https://github.com/linq2js/tenx/tree/master/packages/examples/move-search)
-[Todo App](https://codesandbox.io/s/tenx-todos-6f38j?file=/src/store/index.js)
+1. [Snake Game](https://github.com/linq2js/tenx/tree/master/packages/examples/snake-game)
+1. [Movie Search](https://github.com/linq2js/tenx/tree/master/packages/examples/move-search)
+1. [Todo App](https://codesandbox.io/s/tenx-todos-6f38j?file=/src/store/index.js)
