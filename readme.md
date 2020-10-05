@@ -309,9 +309,8 @@ tenx({
 
 Each dependency item can be:
 
-**string** (name of static state or other computed states)
-
-**function** (a function returns slice of state)
+- **string** (name of static state or other computed states)
+- **function** (a function returns slice of state)
 
 Combiner is a function that retrieves all values of dependency list and returns combined value.
 
@@ -336,8 +335,8 @@ tenx({
 
 ## How to persist app state
 
-Sometimes you want to store your app state to persistence storage (sessionStorage, localStorage, AsyncStorage etc.).
-We define init action to add some logics for handling app state changing.
+If you want to store your app state to persistence storage (sessionStorage, localStorage, AsyncStorage etc.).
+We can define init action to add some logics for handling app state changing.
 
 ```jsx
 const store = tenx(initial, {
@@ -374,11 +373,6 @@ const store = tenx(initial, {
 
     // by using watch api, we can listen when specified state prop changed
     context.watch("todos", function (e) {
-      // current value of watched state
-      console.log(e.current);
-      // previous value of watched state
-      console.log(e.previous);
-      // save todos to local storage
       todoService.save(e.current);
     });
   },
