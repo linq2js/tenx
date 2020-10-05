@@ -10,7 +10,7 @@ npm i tenx --save
 
 ## Introduction
 
-In this article, I am going to help you to learn the fundamentals of react and redux.
+In this article, I am going to help you to learn the fundamentals of react and tenx.
 We will do this by implementing a todolist app using react and tenx.
 
 ### Core concepts
