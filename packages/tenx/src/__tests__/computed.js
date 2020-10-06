@@ -1,4 +1,3 @@
-import fetch from "node-fetch";
 import { entity } from "../extras";
 import delay from "../extras/delay";
 import tenx from "../lib";
@@ -114,4 +113,29 @@ test("debounced computed state", async () => {
   await expect(store.results).resolves.toEqual([1]);
   store.dispatch(({ page }) => page.value++);
   await expect(store.results).resolves.toEqual([2]);
+});
+
+test("computed generator", async () => {
+  const callback = jest.fn();
+  const store = tenx({
+    steps: 2,
+    computed: {
+      async *range(state) {
+        for (let i = 0; i < state.steps; i++) {
+          await delay(10);
+          yield i;
+        }
+      },
+    },
+  });
+
+  store.when("change", () => callback());
+  const firstValue = store.range;
+  await expect(firstValue).resolves.toBe(0);
+  await delay(30);
+  expect(callback).toBeCalledTimes(2);
+  store.dispatch(({ steps }) => steps.value++);
+  const secondValue = store.range;
+  await delay(50);
+  expect(callback).toBeCalledTimes(6);
 });

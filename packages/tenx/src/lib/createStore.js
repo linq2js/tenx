@@ -226,7 +226,13 @@ export default function createStore(
     const selector = createSelector(computed, resolveSelector);
     const state = {
       get value() {
-        return selector(getStateForComputed(), store);
+        const value = selector(getStateForComputed(), store);
+        // is generator
+        if (value && typeof value.next === "function") {
+          handleGenerator(value, onStateValueChange);
+          return value.current;
+        }
+        return value;
       },
     };
     let lastHandledPromise;
@@ -290,4 +296,32 @@ function handlePromiseStatuses(value) {
       throw error;
     }
   );
+}
+
+function handleGenerator(generator, onChange) {
+  if (generator.__isHandled) return;
+  let cancelled = false;
+  generator.__isHandled = true;
+  generator.cancel = () => cancelled;
+
+  function next(payload) {
+    if (cancelled) return;
+    const result = generator.next(payload);
+    // is async generator
+    if (isPromiseLike(result)) {
+      generator.current = new Promise((resolve, reject) => {
+        result.then(({ value, done }) => {
+          if (done || cancelled) return;
+          resolve(value);
+          onChange();
+          next(value);
+        }, reject);
+      });
+      return;
+    }
+    if (result.done) return;
+    return next(result.value);
+  }
+
+  next();
 }
