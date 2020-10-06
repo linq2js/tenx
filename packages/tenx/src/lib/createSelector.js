@@ -14,6 +14,9 @@ export default function createSelector(selector, resolver) {
           lastArgs.some((arg, index) => args[index] !== arg)
         ) {
           try {
+            if (lastResult && typeof lastResult.cancel === "function") {
+              lastResult.cancel();
+            }
             const result = selector(...args);
             if (typeof result === "function") {
               if (resolver && typeof resolver.thunk === "function") {
