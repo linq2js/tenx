@@ -1,6 +1,7 @@
 import React, { Suspense } from "react";
 import "./App.css";
 import tenx from "tenx";
+import { delay } from "tenx/extras";
 import { useStore } from "tenx/react";
 
 const converters = {

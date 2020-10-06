@@ -30,9 +30,9 @@ Unlikely redux, you can define many stores in your app, but we use only single s
 #### Actions
 
 Actions are pure functions. You can only mutate app state inside the actions.
-So action is where you put all app logics.
+So action is where you put all app logic.
 
-An action takes **two** parameters. The first parameter is store context.
+An action takes **two** parameters. The first parameter is the store context.
 It contains many named state mutators and provides some util functions for advanced usages.
 The second parameter is an action payload.
 
@@ -40,7 +40,7 @@ The second parameter is an action payload.
 
 ### Defining app state tree
 
-Firstly, we need to define an app state tree. Todos state is array of todo item, that's looks like:
+Firstly, we need to define an app state tree. Todos state is an array of todo item, that looks like:
 
 ```jsx
 const state = {
@@ -150,13 +150,13 @@ function App() {
 ```
 
 As you see above code, we import useStore() from "tenx/react".
-"tenx/react" is other entry point of tenx package.
+"tenx/react" is another entry point of tenx package.
 This entry includes many utils/hooks for React, we will discover them later on.
 
 useStore() is a React hook, it takes 2 parameters.
-The first one is tenx store object, the second one is state mapping function.
-First parameter of mapping function is state object, it presents all state values of store.
-In this case, we select todos value (its value is array type, not state mutator) from state object.
+The first one is tenx store object, the second one is the state mapping function.
+The first parameter of the mapping function is the state object, it presents all state values of the store.
+In this case, we select todos value (its value is an array type, not state mutator) from the state object.
 
 We successfully created addTodo action and consumed todos state.
 Now we need to create other actions, toggleTodo and removeTodo.
@@ -237,9 +237,9 @@ function TodoFilter() {
 ```
 
 The TodoFilter component above needs 3 states: allTodoCount, activeTodoCount and completedTodoCount.
-Those states will be re-computed whenever the component render, evenly no app state updated.
-By using derived / computed state, you can define some dynamic state computation easily,
-and computed states only re-compute when your app state changed. Let update store creating code.
+Those states will be re-computed whenever the component renders, evenly no app state updated.
+By using derived/computed state, you can define some dynamic state computation easily,
+and computed states only re-compute when your app state changed. Let update the store creating code.
 
 ```jsx
 const store = tenx(

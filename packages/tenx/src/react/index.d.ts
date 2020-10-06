@@ -1,26 +1,22 @@
 import {
-  AccessibleStateValues,
   StoreContext,
-  Dispatcher,
   Loadable,
-  StateBag,
   Store,
-  StoreActions,
-  StoreStateInfer,
-  StoreActionsInfer,
+  MutableStatesInfer,
+  AccessibleStateProps,
+  GenericDispatcher,
+  ActionStoreProps,
 } from "../lib";
 
-export function useStore<TStore extends Store<any, any>>(
-  store: TStore
-): AccessibleStateValues<StoreStateInfer<TStore>>;
-export function useStore<TStore extends Store<any, any>, TResult = any>(
-  store: TStore,
+export function useStore<TState, TAction>(
+  store: Store<TState, TAction>
+): MutableStatesInfer<TState>;
+
+export function useStore<TState, TAction, TResult = any>(
+  store: Store<TState, TAction>,
   selector: (
-    state?: DisplayableStateValues<StoreStateInfer<TStore>>,
-    context?: UseStoreContext<
-      StoreStateInfer<TStore>,
-      StoreActionsInfer<TStore>
-    >
+    state?: DisplayableStateValues<TState>,
+    context?: UseStoreContext<TAction>
   ) => TResult
 ): TResult;
 
@@ -29,18 +25,17 @@ export function componentStore<TState, TActions>(
   actions?: TActions
 ): UseComponentStore<TState, TActions>;
 
-export type UseComponentStore<TState, TActions> = (
+export type UseComponentStore<TState, TAction> = (
   key?: any
-) => StoreContext<StateBag, TState> & {
+) => StoreContext<{}, TState> & {
   callback: CallbackFactory;
-} & StoreActions<TState, TActions>;
+} & ActionStoreProps<TAction>;
 
-export type UseStoreContext<TState, TActions> = {
-  dispatch: Dispatcher;
+export type UseStoreContext<TActions> = GenericDispatcher & {
   callback: CallbackFactory;
-} & StoreActions<TState, TActions>;
+} & ActionStoreProps<TActions>;
 
-export type DisplayableStateValues<TState> = AccessibleStateValues<TState> & {
+export type DisplayableStateValues<TState> = AccessibleStateProps<TState> & {
   get<T = any>(name: string): Loadable<T>;
 };
 

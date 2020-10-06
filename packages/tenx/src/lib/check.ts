@@ -1,4 +1,4 @@
-import tenx, { StoreContext, State } from "./index";
+import tenx, { StoreContext, MutableState } from "./index";
 import {
   ArrayState,
   entitySet,
@@ -35,7 +35,7 @@ const model = {
   },
 };
 const counterStore = tenx(model, {
-  alert(context) {},
+  alert(context: StoreContext) {},
 });
 model.computed.doubleCount2.lastIndexOf("1");
 const counterSnapshot1 = snapshot(counterStore, "count");
@@ -52,7 +52,7 @@ function App() {
     (state, { callback, alert }) => {
       return {
         count: state.count,
-        alert,
+        alert: alert,
       };
     }
   );
@@ -69,7 +69,7 @@ function Add(
     state,
     increase2,
   }: StoreContext<{
-    count: State<number>;
+    count: MutableState<number>;
     todos: ArrayState<string>;
     todos2: EntitySetState<Todo, string>;
     data: EntityState<{ [_: string]: any }>;
@@ -122,6 +122,7 @@ console.log(
   counterStore.count,
   counterStore.todos.length,
   counterStore.todos.map((x) => x),
+  counterStore.todos2.entities,
   counterStore.state.count,
   counterStore.data.name,
   counterStore.dispatch(Add),

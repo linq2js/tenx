@@ -1,4 +1,4 @@
-import { Cancellable, State, Store, StoreStateInfer } from "../lib";
+import { Cancellable, MutableState, MutableStatesInfer, Store } from "../lib";
 
 export function array<T = any>(
   initial: T[],
@@ -16,26 +16,23 @@ export function entitySet<TEntity, TId = any>(
   options: { selectId?: (entity: TEntity) => TId }
 ): EntitySetState<TEntity, TId>;
 
-export function snapshot<TStore extends Store<any, any>>(
-  store: TStore
-): SnapshotStore<Omit<StoreStateInfer<TStore>, "computed">>;
+export function snapshot<TState>(
+  store: Store<TState>
+): SnapshotStore<MutableStatesInfer<TState>>;
 
-export function snapshot<TStore extends Store<any, any>>(
-  store: TStore,
+export function snapshot<TState>(
+  store: Store<TState>,
   options: SnapshotOptions
-): SnapshotStore<Omit<StoreStateInfer<TStore>, "computed">>;
+): SnapshotStore<MutableStatesInfer<TState>>;
 
-export function snapshot<
-  TStore extends Store<any, any>,
-  TKey extends keyof Omit<StoreStateInfer<TStore>, "computed">
->(
-  store: TStore,
+export function snapshot<TState, TKey extends keyof MutableStatesInfer<TState>>(
+  store: Store<TState, any>,
   prop: TKey,
   options?: SnapshotOptions
-): SnapshotStore<StoreStateInfer<TStore>[TKey]>;
+): SnapshotStore<MutableStatesInfer<TState>[TKey]>;
 
 export function snapshot<TModel>(
-  store: Store<Required<TModel>, {}>,
+  store: Store<Required<TModel>>,
   props: (keyof TModel)[],
   options?: SnapshotOptions
 ): SnapshotStore<TModel>;
@@ -63,8 +60,8 @@ export interface SnapshotStore<TEntity> {
   clear(): void;
 }
 
-export interface ArrayState<T> extends State<T[]> {
-  (state: State<any>): this;
+export interface ArrayState<T> extends MutableState<T[]> {
+  (state: MutableState<any>): this;
   push(...items: T[]): void;
   pop(): T | undefined;
   shift(): T | undefined;
@@ -83,8 +80,8 @@ export interface ArrayState<T> extends State<T[]> {
   swap(a: number, b: number): void;
 }
 
-export interface EntityState<T> extends State<T> {
-  (state: State<any>): this;
+export interface EntityState<T> extends MutableState<T> {
+  (state: MutableState<any>): this;
   set(values: Partial<T>): T;
   set(key: (keyof T)[], value: any): T;
   set(key: keyof T, value: any): T;
@@ -132,7 +129,7 @@ export interface EntitySetStateValue<TEntity, TId>
 }
 
 export interface EntitySetState<TEntity, TId>
-  extends State<EntitySetStateValue<TEntity, TId>>,
+  extends MutableState<EntitySetStateValue<TEntity, TId>>,
     EntitySetStateApi<TEntity> {
   get(id: TId, defaultValue?: TEntity): TEntity;
   entity(id: TId): EntityState<TEntity>;
